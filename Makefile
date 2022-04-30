@@ -15,8 +15,6 @@ IVER = 17# 15,16,17,18
 CMP = gcc# intel,gcc
 FFT = generic# generic,fftw3,mkl
 
-BUILD ?=
-
 #######CMP settings###########
 ifeq ($(CMP),intel)
 FC = mpiifort
@@ -26,13 +24,8 @@ FFLAGS = -fpp -O3 -xSSE4.2 -axAVX,CORE-AVX-I,CORE-AVX2 -ipo -fp-model fast=2 -mc
 else ifeq ($(CMP),gcc)
 FC = mpif90
 #FFLAGS = -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -x f95-cpp-input
-ifeq ($(BUILD),debug)
-FFLAGS = -cpp -g3 -Og
-FFLAGS += -ffpe-trap=invalid,zero -fcheck=bounds
-else
-FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g
-endif
-FFLAGS += -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
+FFLAGS = -cpp -O3 -funroll-loops -floop-optimize -g -Warray-bounds -fcray-pointer -fbacktrace -ffree-line-length-none
+#-ffpe-trap=invalid,zero
 ifeq "$(shell expr `gfortran -dumpversion | cut -f1 -d.` \>= 10)" "1"
 FFLAGS += -fallow-argument-mismatch
 endif

@@ -122,11 +122,13 @@ subroutine transpose_x_to_y_real_start(handle, src, dst, sbuf, rbuf, &
        decomp%x1dist, decomp)
 
 #ifdef EVEN
-  call NBC_IALLTOALL(sbuf, decomp%x1count, real_type, &
+   ! EAFIT - Changing from NBC call to MPI
+  call MPI_IALLTOALL(sbuf, decomp%x1count, real_type, &
        rbuf, decomp%y1count, real_type, &
        DECOMP_2D_COMM_COL, handle, ierror)
 #else
-  call NBC_IALLTOALLV(sbuf, decomp%x1cnts, decomp%x1disp, real_type, &
+   ! EAFIT - Changing from NBC call to MPI
+  call MPI_IALLTOALLV(sbuf, decomp%x1cnts, decomp%x1disp, real_type, &
        rbuf, decomp%y1cnts, decomp%y1disp, real_type, &
        DECOMP_2D_COMM_COL, handle, ierror)
 #endif
@@ -159,7 +161,8 @@ subroutine transpose_x_to_y_real_wait(handle, src, dst, sbuf, rbuf, &
   d2 = SIZE(dst,2)
   d3 = SIZE(dst,3)
 
-  call NBC_WAIT(handle, ierror)
+  ! EAFIT - Changing from NBC call to MPI
+  call MPI_WAIT(handle, ierror)
 
   ! rearrange receive buffer
   call mem_merge_xy_real(rbuf, d1, d2, d3, dst, dims(1), &
@@ -280,11 +283,13 @@ subroutine transpose_x_to_y_complex_start(handle, src, dst, sbuf, &
        decomp%x1dist, decomp)
 
 #ifdef EVEN
-  call NBC_IALLTOALL(sbuf, decomp%x1count, &
+   ! EAFIT - Changing from NBC call to MPI
+  call MPI_IALLTOALL(sbuf, decomp%x1count, &
        complex_type, rbuf, decomp%y1count, &
        complex_type, DECOMP_2D_COMM_COL, handle, ierror)
 #else
-  call NBC_IALLTOALLV(sbuf, decomp%x1cnts, decomp%x1disp, &
+   ! EAFIT - Changing from NBC call to MPI
+  call MPI_IALLTOALLV(sbuf, decomp%x1cnts, decomp%x1disp, &
        complex_type, rbuf, decomp%y1cnts, decomp%y1disp, &
        complex_type, DECOMP_2D_COMM_COL, handle, ierror)
 #endif
@@ -317,7 +322,8 @@ subroutine transpose_x_to_y_complex_wait(handle, src, dst, sbuf, &
   d2 = SIZE(dst,2)
   d3 = SIZE(dst,3)
 
-  call NBC_WAIT(handle, ierror)
+  ! EAFIT - Changing from NBC call to MPI
+  call MPI_WAIT(handle, ierror)
 
   ! rearrange receive buffer
   call mem_merge_xy_complex(rbuf, d1, d2, d3, dst, dims(1), &

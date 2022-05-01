@@ -150,6 +150,7 @@ subroutine transpose_x_to_y_real_wait(handle, src, dst, sbuf, rbuf, &
 
   integer :: d1,d2,d3
   integer :: ierror
+  integer, dimension(MPI_STATUS_SIZE) :: status
 
   if (present(opt_decomp)) then
      decomp = opt_decomp
@@ -162,7 +163,7 @@ subroutine transpose_x_to_y_real_wait(handle, src, dst, sbuf, rbuf, &
   d3 = SIZE(dst,3)
 
   ! EAFIT - Changing from NBC call to MPI
-  call MPI_WAIT(handle, ierror)
+  call MPI_WAIT(handle, status, ierror)
 
   ! rearrange receive buffer
   call mem_merge_xy_real(rbuf, d1, d2, d3, dst, dims(1), &
@@ -311,6 +312,8 @@ subroutine transpose_x_to_y_complex_wait(handle, src, dst, sbuf, &
 
   integer :: d1,d2,d3
   integer :: ierror
+  integer, dimension(MPI_STATUS_SIZE) :: status
+
 
   if (present(opt_decomp)) then
      decomp = opt_decomp
@@ -323,7 +326,7 @@ subroutine transpose_x_to_y_complex_wait(handle, src, dst, sbuf, &
   d3 = SIZE(dst,3)
 
   ! EAFIT - Changing from NBC call to MPI
-  call MPI_WAIT(handle, ierror)
+  call MPI_WAIT(handle, status, ierror)
 
   ! rearrange receive buffer
   call mem_merge_xy_complex(rbuf, d1, d2, d3, dst, dims(1), &

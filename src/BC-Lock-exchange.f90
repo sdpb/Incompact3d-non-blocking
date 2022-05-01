@@ -36,7 +36,11 @@ module lockexch
   use decomp_2d, only : xsize, ysize, zsize
   use decomp_2d, only : xstart, ystart, zstart
   use decomp_2d, only : xend, yend, zend
-  use decomp_2d, only : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
+  use decomp_2d, only : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x, transpose_x_to_y_start, transpose_y_to_z_start, transpose_z_to_y_start, transpose_y_to_x_start, transpose_x_to_y_wait, transpose_y_to_z_wait, transpose_z_to_y_wait, transpose_y_to_x_wait
+
+
+
+
 
   use variables, only : numscalar
 

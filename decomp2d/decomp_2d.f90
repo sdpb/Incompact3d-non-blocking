@@ -1569,7 +1569,7 @@ contains
 
     integer :: handle, ierror
 
-    call NBC_TEST(handle,ierror)
+    call MPI_TEST(handle,ierror)
 
     return
   end subroutine transpose_test

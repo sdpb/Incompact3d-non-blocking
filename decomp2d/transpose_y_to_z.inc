@@ -134,11 +134,11 @@ subroutine transpose_y_to_z_real_start(handle, src, dst, sbuf, rbuf, &
        decomp%y2dist, decomp)
 
 #ifdef EVEN
-  call NBC_IALLTOALL(sbuf, decomp%y2count, real_type, &
+  call MPI_IALLTOALL(sbuf, decomp%y2count, real_type, &
        rbuf, decomp%z2count, real_type, &
        DECOMP_2D_COMM_ROW, handle, ierror)
 #else
-  call NBC_IALLTOALLV(sbuf, decomp%y2cnts, decomp%y2disp, real_type, &
+  call MPI_IALLTOALLV(sbuf, decomp%y2cnts, decomp%y2disp, real_type, &
        rbuf, decomp%z2cnts, decomp%z2disp, real_type, &
        DECOMP_2D_COMM_ROW, handle, ierror)
 #endif
@@ -166,7 +166,7 @@ subroutine transpose_y_to_z_real_wait(handle, src, dst, sbuf, rbuf, &
      decomp = decomp_main
   end if
 
-  call NBC_WAIT(handle, ierror)
+  call MPI_WAIT(handle, ierror)
 
   dst = rbuf
 
@@ -297,11 +297,11 @@ subroutine transpose_y_to_z_complex_start(handle, src, dst, sbuf, &
        decomp%y2dist, decomp)
 
 #ifdef EVEN
-  call NBC_IALLTOALL(sbuf, decomp%y2count, &
+  call MPI_IALLTOALL(sbuf, decomp%y2count, &
        complex_type, rbuf, decomp%z2count, &
        complex_type, DECOMP_2D_COMM_ROW, handle, ierror)
 #else
-  call NBC_IALLTOALLV(sbuf, decomp%y2cnts, decomp%y2disp, &
+  call MPI_IALLTOALLV(sbuf, decomp%y2cnts, decomp%y2disp, &
        complex_type, rbuf,decomp%z2cnts, decomp%z2disp, &
        complex_type, DECOMP_2D_COMM_ROW, handle, ierror)
 #endif
@@ -329,7 +329,7 @@ subroutine transpose_y_to_z_complex_wait(handle, src, dst, sbuf, &
      decomp = decomp_main
   end if
 
-  call NBC_WAIT(handle, ierror)
+  call MPI_WAIT(handle, ierror)
 
   dst = rbuf
 

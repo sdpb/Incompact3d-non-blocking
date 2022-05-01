@@ -121,11 +121,11 @@ call mem_split_yx_real(src, s1, s2, s3, sbuf, dims(1), &
 decomp%y1dist, decomp)
 
 #ifdef EVEN
-call NBC_IALLTOALL(sbuf, decomp%y1count, real_type, &
+call MPI_IALLTOALL(sbuf, decomp%y1count, real_type, &
 rbuf, decomp%x1count, real_type, &
 DECOMP_2D_COMM_COL, handle, ierror)
 #else
-call NBC_IALLTOALLV(sbuf, decomp%y1cnts, decomp%y1disp, real_type, &
+call MPI_IALLTOALLV(sbuf, decomp%y1cnts, decomp%y1disp, real_type, &
 rbuf, decomp%x1cnts, decomp%x1disp, real_type, &
 DECOMP_2D_COMM_COL, handle, ierror)
 #endif
@@ -158,7 +158,7 @@ d1 = SIZE(dst,1)
 d2 = SIZE(dst,2)
 d3 = SIZE(dst,3)
 
-call NBC_WAIT(handle, ierror)
+call MPI_WAIT(handle, ierror)
 
 ! rearrange receive buffer
 call mem_merge_yx_real(rbuf, d1, d2, d3, dst, dims(1), &
@@ -279,11 +279,11 @@ call mem_split_yx_complex(src, s1, s2, s3, sbuf, dims(1), &
 decomp%y1dist, decomp)
 
 #ifdef EVEN
-call NBC_IALLTOALL(sbuf, decomp%y1count, &
+call MPI_IALLTOALL(sbuf, decomp%y1count, &
 complex_type, rbuf, decomp%x1count, &
 complex_type, DECOMP_2D_COMM_COL, handle, ierror)
 #else
-call NBC_IALLTOALLV(sbuf, decomp%y1cnts, decomp%y1disp, &
+call MPI_IALLTOALLV(sbuf, decomp%y1cnts, decomp%y1disp, &
 complex_type, rbuf, decomp%x1cnts, decomp%x1disp, &
 complex_type, DECOMP_2D_COMM_COL, handle, ierror)
 #endif
@@ -316,7 +316,7 @@ d1 = SIZE(dst,1)
 d2 = SIZE(dst,2)
 d3 = SIZE(dst,3)
 
-call NBC_WAIT(handle, ierror)
+call MPI_WAIT(handle, ierror)
 
 ! rearrange receive buffer
 call mem_merge_yx_complex(rbuf, d1, d2, d3, dst, dims(1), &

@@ -1569,7 +1569,7 @@ contains
 
     integer :: handle, ierror
 
-    call MPI_TEST(handle, MPI_STATUS_IGNORE,ierror)
+    call MPI_TEST(handle,ierror, MPI_STATUS_IGNORE)
 
     return
   end subroutine transpose_test

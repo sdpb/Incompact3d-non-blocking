@@ -290,6 +290,11 @@ contains
 
     implicit none
 
+    ! EAFIT - define rbuf and sbuf
+    real(mytype), save, allocatable, dimension(:,:,:) :: sbufpp1,sbufpgy1,sbufpgz1,rbufduxdxp2,rbufuyp2,rbufuzp2
+    ! EAFIT - define handle mpi routine
+    integer, dimension(26) :: handles
+
     !  TYPE(DECOMP_INFO) :: ph1,ph3,ph4
 
     !X PENCILS NX NY NZ  -->NXM NY NZ
@@ -332,22 +337,31 @@ contains
        endif
        call interxvp(pgy1,ta1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
        pp1(:,:,:) = pp1(:,:,:) + pgy1(:,:,:)
+       ! EAFIT - Call transpose start
+       call transpose_x_to_y_start(handles(1),sbufpp1,rbufduxdxp2,pp1,duxdxp2,ph4)!->NXM NY NZ
     endif
 
     call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(2),sbufpgy1,rbufuyp2,pgy1,uyp2,ph4)
+
     call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(3),sbufpgz1,rbufuzp2,pgz1,uzp2,ph4)
 
-    call transpose_x_to_y(pp1,duxdxp2,ph4)!->NXM NY NZ
-    call transpose_x_to_y(pgy1,uyp2,ph4)
-    call transpose_x_to_y(pgz1,uzp2,ph4)
-
+    ! EAFIT - Call transpose wait
+    call transpose_x_to_y_wait(handles(1),sbufpp1,rbufduxdxp2,pp1,duxdxp2,ph4)!->NXM NY NZ
     !WORK Y-PENCILS
     call interyvp(upi2,duxdxp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
+    ! EAFIT - Call transpose wait
+    call transpose_x_to_y_wait(handles(2),sbufpgy1,rbufuyp2,pgy1,uyp2,ph4)
     call deryvp(duydypi2,uyp2,dipp2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
 
     !! Compute sum dudx + dvdy
     duydypi2(:,:,:) = duydypi2(:,:,:) + upi2(:,:,:)
-
+    
+    ! EAFIT - Call transpose wait
+    call transpose_x_to_y_wait(handles(3),sbufpgz1,rbufuzp2,pgz1,uzp2,ph4)
     call interyvp(upi2,uzp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
 
     call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ

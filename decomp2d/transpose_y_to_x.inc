@@ -158,7 +158,7 @@ d1 = SIZE(dst,1)
 d2 = SIZE(dst,2)
 d3 = SIZE(dst,3)
 
-call MPI_WAIT(handle, ierror)
+call MPI_WAIT(handle, MPI_STATUS_IGNORE, ierror)
 
 ! rearrange receive buffer
 call mem_merge_yx_real(rbuf, d1, d2, d3, dst, dims(1), &
@@ -316,7 +316,7 @@ d1 = SIZE(dst,1)
 d2 = SIZE(dst,2)
 d3 = SIZE(dst,3)
 
-call MPI_WAIT(handle, ierror)
+call MPI_WAIT(handle, MPI_STATUS_IGNORE, ierror)
 
 ! rearrange receive buffer
 call mem_merge_yx_complex(rbuf, d1, d2, d3, dst, dims(1), &

@@ -166,7 +166,7 @@ subroutine transpose_y_to_z_real_wait(handle, src, dst, sbuf, rbuf, &
      decomp = decomp_main
   end if
 
-  call MPI_WAIT(handle, ierror)
+  call MPI_WAIT(handle, MPI_STATUS_IGNORE, ierror)
 
   dst = rbuf
 
@@ -329,7 +329,7 @@ subroutine transpose_y_to_z_complex_wait(handle, src, dst, sbuf, &
      decomp = decomp_main
   end if
 
-  call MPI_WAIT(handle, ierror)
+  call MPI_WAIT(handle, MPI_STATUS_IGNORE, ierror)
 
   dst = rbuf
 

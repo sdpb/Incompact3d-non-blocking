@@ -164,7 +164,7 @@ subroutine transpose_z_to_y_real_wait(handle, src, dst, sbuf, rbuf, &
   d2 = SIZE(dst,2)
   d3 = SIZE(dst,3)
 
-  call MPI_WAIT(handle, ierror)
+  call MPI_WAIT(handle, MPI_STATUS_IGNORE, ierror)
 
   ! rearrange receive buffer
   call mem_merge_zy_real(rbuf, d1, d2, d3, dst, dims(2), &
@@ -327,7 +327,7 @@ subroutine transpose_z_to_y_complex_wait(handle, src, dst, sbuf, &
   d2 = SIZE(dst,2)
   d3 = SIZE(dst,3)
 
-  call MPI_WAIT(handle, ierror)
+  call MPI_WAIT(handle, MPI_STATUS_IGNORE, ierror)
 
   ! rearrange receive buffer
   call mem_merge_zy_complex(rbuf, d1, d2, d3, dst, dims(2), &

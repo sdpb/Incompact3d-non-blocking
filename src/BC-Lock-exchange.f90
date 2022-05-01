@@ -493,9 +493,10 @@ contains
     call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
 
     ! See if its working
-    open(1, file = 'transpose_nb', status = 'new')  
-    write(1,*) "algo esta pasando"
-    close(1) 
+    print *, "DIMSSSSSSSSS SIUUUUUUUUU"
+    !open(1, file = 'transpose_nb', status = 'new')  
+    !write(1,*) "algo esta pasando"
+    !close(1) 
 
     !!z-derivatives
     call transpose_y_to_z(ux2,ux3)

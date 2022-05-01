@@ -440,6 +440,10 @@ contains
     implicit none
 
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,vol1
+    ! EAFIT - define sbuf and rbuf for mpi routine
+    real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: sbufux1,sbufuy1,sbufuz1,rbufux2,rbufuy2,rbufuz2
+    ! EAFIT - define handle mpi routine
+    integer, dimension(32) :: handles
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),nrhotime) :: rho1
 
@@ -464,30 +468,34 @@ contains
     !x-derivatives
     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
     ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(ux1,ux2)
+    call transpose_x_to_y_start(handles(1),ux1,ux2, sbufux1,rbufux2)
 
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
     ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(uy1,uy2)
+    call transpose_x_to_y_start(handles(2),uy1,uy2,sbufuy1,rbufuy2)
 
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(uz1,uz2)
+    call transpose_x_to_y_start(handles(3),uz1,uz2,sbufuz1,rbufuz2)
 
 
     !y-derivatives
     ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(ux1,ux2)
+    call transpose_x_to_y_wait(handles(1),ux1,ux2, sbufux1,rbufux2)
     call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
 
     ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(uy1,uy2)
+    call transpose_x_to_y_wait(handles(2),uy1,uy2,sbufuy1,rbufuy2)
     call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
     
     ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(uz1,uz2)
+    call transpose_x_to_y_wait(handles(3),uz1,uz2,sbufuz1,rbufuz2)
     call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
 
+    ! See if its working
+    open(1, file = 'transpose_nb', status = 'new')  
+    write(1,*) "algo esta pasando"
+    close(1) 
 
     !!z-derivatives
     call transpose_y_to_z(ux2,ux3)

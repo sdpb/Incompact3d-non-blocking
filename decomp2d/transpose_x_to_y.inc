@@ -163,11 +163,13 @@ subroutine transpose_x_to_y_real_wait(handle, src, dst, sbuf, rbuf, &
   d3 = SIZE(dst,3)
 
   ! EAFIT - Changing from NBC call to MPI
-  call MPI_WAIT(handle, status, ierror)
+  call MPI_WAIT(handle, MPI_STATUS_IGNORE, ierror)
 
   ! rearrange receive buffer
   call mem_merge_xy_real(rbuf, d1, d2, d3, dst, dims(1), &
        decomp%y1dist, decomp)
+
+
 
   return
 end subroutine transpose_x_to_y_real_wait
@@ -326,7 +328,7 @@ subroutine transpose_x_to_y_complex_wait(handle, src, dst, sbuf, &
   d3 = SIZE(dst,3)
 
   ! EAFIT - Changing from NBC call to MPI
-  call MPI_WAIT(handle, status, ierror)
+  call MPI_WAIT(handle, MPI_STATUS_IGNORE, ierror)
 
   ! rearrange receive buffer
   call mem_merge_xy_complex(rbuf, d1, d2, d3, dst, dims(1), &
@@ -374,6 +376,7 @@ subroutine mem_split_xy_real(in,n1,n2,n3,out,iproc,dist,decomp)
      do k=1,n3
         do j=1,n2
            do i=i1,i2
+
               out(pos) = in(i,j,k)
               pos = pos + 1
            end do

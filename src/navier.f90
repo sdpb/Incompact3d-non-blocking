@@ -293,7 +293,7 @@ contains
     ! EAFIT - define rbuf and sbuf
     real(mytype), allocatable, dimension(:,:,:) :: sbufpp1,sbufpgy1,sbufpgz1,rbufduxdxp2,rbufuyp2,rbufuzp2
     ! EAFIT - define handle mpi routine
-    integer, dimension(26) :: handles
+    integer, dimension(3) :: handles
 
     !  TYPE(DECOMP_INFO) :: ph1,ph3,ph4
 
@@ -307,19 +307,17 @@ contains
 
     integer :: nvect3,i,j,k,nlock
     integer :: code
-    integer :: handle_pp1
     real(mytype) :: tmax,tmoy,tmax1,tmoy1
     integer :: cn1, cn2, cn3
 
-    cn1=size(pp1,1)
-    cn2=size(pp1,2)
-    cn3=size(pp1,3)
-    allocate(sbufpp1(cn1, cn2, cn3))
-    cn1=size(duxdxp2,1)
-    cn2=size(duxdxp2,2)
-    cn3=size(duxdxp2,3)
-    allocate(rbufduxdxp2(cn1, cn2, cn3))
+    allocate(sbufpp1(size(pp1,1), size(pp1,2), size(pp1,3)))
+    allocate(rbufduxdxp2(size(duxdxp2,1), size(duxdxp2,2), size(duxdxp2,3)))
 
+    allocate(sbufpgy1(size(pgy1,1), size(pgy1,2), size(pgy1,3)))
+    allocate(rbufuyp2(size(uyp2,1), size(uyp2,2), size(uyp2,3)))
+
+    allocate(sbufpgz1(size(pgz1,1), size(pgz1,2), size(pgz1,3)))
+    allocate(rbufuzp2(size(uzp2,1), size(uzp2,2), size(uzp2,3)))
 
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
@@ -352,31 +350,33 @@ contains
        ! EAFIT - Call transpose start
 
     endif
-    call transpose_x_to_y_start(handle_pp1,pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
-
+    
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(1),pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
     call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-    ! EAFIT - Call transpose start
-    ! call transpose_x_to_y_start(handles(2),pgy1,uyp2,sbufpgy1,rbufuyp2,ph4)
 
-    call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
     ! EAFIT - Call transpose start
-    ! call transpose_x_to_y_start(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
-    call transpose_x_to_y(pgy1,uyp2,ph4)
-    call transpose_x_to_y(pgz1,uzp2,ph4)
+    call transpose_x_to_y_start(handles(2),pgy1,uyp2,sbufpgy1,rbufuyp2,ph4)
+    call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
 
     ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(handle_pp1,pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
+    call transpose_x_to_y_wait(handles(1),pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
+
     !WORK Y-PENCILS
     call interyvp(upi2,duxdxp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
+
     ! EAFIT - Call transpose wait
-    ! call transpose_x_to_y_wait(handles(2),pgy1,uyp2,sbufpgy1,rbufuyp2,ph4)
+    call transpose_x_to_y_wait(handles(2),pgy1,uyp2,sbufpgy1,rbufuyp2,ph4)
     call deryvp(duydypi2,uyp2,dipp2,sy,cfy6,csy6,cwy6,ppyi,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),0)
 
     !! Compute sum dudx + dvdy
     duydypi2(:,:,:) = duydypi2(:,:,:) + upi2(:,:,:)
     
     ! EAFIT - Call transpose wait
-    ! call transpose_x_to_y_wait(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
+    call transpose_x_to_y_wait(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
     call interyvp(upi2,uzp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
 
     call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
@@ -881,7 +881,7 @@ contains
   SUBROUTINE calc_divu_constraint(divu3, rho1, phi1)
 
     USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-    USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z
+    USE decomp_2d, ONLY : transpose_x_to_y, transpose_x_to_y_start, transpose_x_to_y_wait, transpose_y_to_z, transpose_y_to_z_start, transpose_y_to_z_wait
     USE param, ONLY : nrhotime, zero, ilmn, pressure0, imultispecies, massfrac, mol_weight
     USE param, ONLY : ibirman_eos
     USE param, ONLY : xnu, prandtl
@@ -894,12 +894,20 @@ contains
     USE var, ONLY : phi3, ta3, tb3, tc3, td3, rho3, di3
     USE param, only : zero
     IMPLICIT NONE
+    integer, dimension(2) :: handles
+    real(mytype), allocatable, dimension(:,:,:) :: sbufta1, rbufta2, sbuftb1, rbuftb2
 
     INTEGER :: is, tmp
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     REAL(mytype), INTENT(OUT), DIMENSION(zsize(1), zsize(2), zsize(3)) :: divu3
+
+    allocate(sbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
+    allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+
+    allocate(sbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
+    allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
 
     IF (ilmn.and.(.not.ibirman_eos)) THEN
        !!------------------------------------------------------------------------------
@@ -929,8 +937,10 @@ contains
           ENDDO
        ENDIF
 
-       CALL transpose_x_to_y(ta1, ta2)        !! Temperature
-       CALL transpose_x_to_y(tb1, tb2)        !! d2Tdx2
+       ! EAFIT - Call transpose start
+       CALL transpose_x_to_y_start(handles(1), ta1, ta2, sbufta1, rbufta2)        !! Temperature
+       ! EAFIT - Call transpose start
+       CALL transpose_x_to_y_start(handles(2), tb1, tb2, sbuftb1, rbuftb2)        !! d2Tdx2
        IF (imultispecies) THEN
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
@@ -943,6 +953,8 @@ contains
        !! Y-pencil
        tmp = iimplicit
        iimplicit = 0
+       ! EAFIT - Call transpose wait
+       CALL transpose_x_to_y_wait(handles(1), ta1, ta2, sbufta1, rbufta2)        !! Temperature
        CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
        iimplicit = tmp
        IF (imultispecies) THEN
@@ -967,6 +979,8 @@ contains
              ENDIF
           ENDDO
        ENDIF
+       ! EAFIT - Call transpose wait 
+       CALL transpose_x_to_y_wait(handles(2), tb1, tb2, sbuftb1, rbuftb2)        !! d2Tdx2
        tb2(:,:,:) = tb2(:,:,:) + tc2(:,:,:)
 
        CALL transpose_y_to_z(ta2, ta3)        !! Temperature

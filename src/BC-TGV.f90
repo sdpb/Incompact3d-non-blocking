@@ -414,7 +414,7 @@ contains
        enst=enst/(nxc*nyc*nzc)
 
        ! EAFIT - Call transpose wait
-       call transpose_y_to_x_start(handles(2),tb2,te1,sbuftb2,rbufte1)
+       call transpose_y_to_x_wait(handles(2),tb2,te1,sbuftb2,rbufte1)
 
        ! EAFIT - Call transpose wait
        call transpose_y_to_x_wait(handles(1),tf2,ti1,sbuftf2,rbufti1)

@@ -247,12 +247,17 @@ contains
        ti1(:,:,:) = ti1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
     endif
 
+    !call transpose_x_to_y(ux1,ux2)
+    !call transpose_x_to_y(uy1,uy2)
+    !call transpose_x_to_y(uz1,uz2)
+
+
     if (ilmn) then
         ! EAFIT - Call transpose start
         call transpose_x_to_y_start(handles(5),mu1,mu2,sbufmu1,rbufmu2)
-     else
+    else
         rho2(:,:,:) = one
-     endif
+    endif
 
     !call transpose_x_to_y(ux1,ux2)
     !call transpose_x_to_y(uy1,uy2)
@@ -277,6 +282,13 @@ contains
     ! EAFIT - Call transpose wait
     call transpose_x_to_y_wait(handles(3),uz1,uz2,sbufuz1,rbufuz2)
 
+
+    !if (ilmn) then
+    !   call transpose_x_to_y(rho1(:,:,:,1),rho2)
+    !   call transpose_x_to_y(mu1,mu2)
+    !else
+    !   rho2(:,:,:) = one
+    !endif
 
     !WORK Y-PENCILS
     if (ilmn) then
@@ -345,12 +357,15 @@ contains
        ti2(:,:,:) = ti2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
     endif
 
-
-    ! EAFIT - Call transpose wait       
+    !call transpose_y_to_z(ux2,ux3)
+    !call transpose_y_to_z(uy2,uy3)
+    !call transpose_y_to_z(uz2,uz3)
+   
+    !! EAFIT - Call transpose wait       
     call transpose_y_to_z_wait(handles(6),ux2,ux3,sbufux2,rbufux3)
-    ! EAFIT - Call transpose wait       
+    !! EAFIT - Call transpose wait       
     call transpose_y_to_z_wait(handles(7),uy2,uy3,sbufuy2,rbufuy3)
-    ! EAFIT - Call transpose wait       
+    !! EAFIT - Call transpose wait       
     call transpose_y_to_z_wait(handles(8),uz2,uz3,sbufuz2,rbufuz3)
 
     !WORK Z-PENCILS
@@ -362,6 +377,8 @@ contains
        call transpose_y_to_z_start(handles(10),mu2,mu3,sbufmu2,rbufmu3)
        ! EAFIT - Call transpose wait       
        call transpose_y_to_z_wait(handles(9),rho2,rho3,sbufrho2,rbufrho3)
+       !call transpose_y_to_z(rho2,rho3)
+       !call transpose_y_to_z(mu2,mu3)
        td3(:,:,:) = rho3(:,:,:) * ux3(:,:,:) * uz3(:,:,:)
        te3(:,:,:) = rho3(:,:,:) * uy3(:,:,:) * uz3(:,:,:)
        tf3(:,:,:) = rho3(:,:,:) * uz3(:,:,:) * uz3(:,:,:)
@@ -440,11 +457,20 @@ contains
       call transpose_z_to_y_start(handles(13),tf3,tf2,sbuftf3,rbuftf2)
     else
       td3(:,:,:) = xnu*ta3(:,:,:) - half * td3(:,:,:)
+      call transpose_z_to_y_start(handles(11),td3,td2,sbuftd3,rbuftd2)
       te3(:,:,:) = xnu*tb3(:,:,:) - half * te3(:,:,:)
+      call transpose_z_to_y_start(handles(12),te3,te2,sbufte3,rbufte2)
       tf3(:,:,:) = xnu*tc3(:,:,:) - half * tf3(:,:,:)
+      call transpose_z_to_y_start(handles(13),tf3,tf2,sbuftf3,rbuftf2)
     endif
 
     
+    !WORK Y-PENCILS
+    !call transpose_z_to_y(td3,td2)
+    !call transpose_z_to_y(te3,te2)
+    !call transpose_z_to_y(tf3,tf2)
+
+
     ! Convective terms of y-pencil (tg2,th2,ti2) and sum of convective and diffusive terms of z-pencil (td2,te2,tf2) are now in tg2, th2, ti2 (half for skew-symmetric)
     ! EAFIT - Call transpose wait       
     call transpose_z_to_y_wait(handles(11),td3,td2,sbuftd3,rbuftd2)
@@ -581,9 +607,9 @@ contains
     endif
 
     !WORK X-PENCILS
-    ! call transpose_y_to_x(ta2,ta1)
-    ! call transpose_y_to_x(tb2,tb1)
-    ! call transpose_y_to_x(tc2,tc1) !diff+conv. terms
+    !call transpose_y_to_x(ta2,ta1)
+    !call transpose_y_to_x(tb2,tb1)
+    !call transpose_y_to_x(tc2,tc1) !diff+conv. terms
 
     !DIFFUSIVE TERMS IN X
     call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,ubcx)

@@ -125,6 +125,13 @@ contains
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
 
+
+#ifdef DEBG 
+    real(mytype) avg_param
+#endif
+    
+    integer :: i,j,k,is
+
     ! EAFIT - define allocates
     allocate(sbufux1(size(ux1,1), size(ux1,2), size(ux1,3)))
     allocate(rbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
@@ -165,18 +172,6 @@ contains
 
     allocate(sbuftf3(size(tf3,1), size(tf3,2), size(tf3,3)))
     allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
-
-
-
-
-
-
-
-#ifdef DEBG 
-    real(mytype) avg_param
-#endif
-    
-    integer :: i,j,k,is
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS

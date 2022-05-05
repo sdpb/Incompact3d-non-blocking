@@ -314,16 +314,12 @@ contains
     ! EAFIT - define allocates
     allocate(sbufpp1(size(pp1,1), size(pp1,2), size(pp1,3)))
     allocate(rbufduxdxp2(size(duxdxp2,1), size(duxdxp2,2), size(duxdxp2,3)))
-
     allocate(sbufpgy1(size(pgy1,1), size(pgy1,2), size(pgy1,3)))
     allocate(rbufuyp2(size(uyp2,1), size(uyp2,2), size(uyp2,3)))
-
     allocate(sbufpgz1(size(pgz1,1), size(pgz1,2), size(pgz1,3)))
     allocate(rbufuzp2(size(uzp2,1), size(uzp2,2), size(uzp2,3)))
-
     allocate(sbufduydypi2(size(duydypi2,1), size(duydypi2,2), size(duydypi2,3)))
     allocate(rbufduxydxyp3(size(duxydxyp3,1), size(duxydxyp3,2), size(duxydxyp3,3)))
-
     allocate(sbufupi2(size(upi2,1), size(upi2,2), size(upi2,3)))
     allocate(rbufuzp3(size(uzp3,1), size(uzp3,2), size(uzp3,3)))
 
@@ -436,6 +432,16 @@ contains
     endif
 
     return
+    deallocate(sbufpp1)
+    deallocate(rbufduxdxp2)
+    deallocate(sbufpgy1)
+    deallocate(rbufuyp2)
+    deallocate(sbufpgz1)
+    deallocate(rbufuzp2)
+    deallocate(sbufduydypi2)
+    deallocate(rbufduxydxyp3)
+    deallocate(sbufupi2)
+    deallocate(rbufuzp3)
   end subroutine divergence
   !############################################################################
   !subroutine GRADP
@@ -592,6 +598,16 @@ contains
     endif
 
     return
+    deallocate(sbufpgz3)
+    deallocate(rbufpgz2)
+    deallocate(sbufppi3)
+    deallocate(rbufpp2)
+    deallocate(sbufppi2)
+    deallocate(rbufpp1)
+    deallocate(sbufpgy2)
+    deallocate(rbufpgy1)
+    deallocate(sbufpgzi2)
+    deallocate(rbufpgz1)
   end subroutine gradp
   !############################################################################
   !############################################################################
@@ -940,8 +956,9 @@ contains
     USE param, only : zero
     IMPLICIT NONE
     integer, dimension(4) :: handles
-    real(mytype), allocatable, dimension(:,:,:) :: sbufta1, rbufta2, sbuftb1, rbuftb2
+    real(mytype), allocatable, dimension(:,:,:) :: sbufta1, rbufta2, sbuftb1, rbuftb2,sbufta2,rbufta3,sbuftb2,rbuftb3
     real(mytype), allocatable, dimension(:,:,:,:) :: sbufphi2,rbufphi3
+    integer, allocatable,dimension(:) :: handles_ims
     INTEGER :: is, tmp
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
@@ -950,11 +967,15 @@ contains
 
     allocate(sbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
     allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
-
     allocate(sbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
     allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
     allocate(sbufphi2(size(phi2,1), size(phi2,2), size(phi2,3), 1:numscalar))
     allocate(rbufphi3(size(phi3,1), size(phi3,2), size(phi3,3), 1:numscalar))
+    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(handles_ims(numscalar))
 
     IF (ilmn.and.(.not.ibirman_eos)) THEN
        !!------------------------------------------------------------------------------
@@ -1035,11 +1056,10 @@ contains
        !CALL transpose_y_to_z(ta2, ta3)        !! Temperature
        !CALL transpose_y_to_z(tb2, tb3)        !! d2Tdx2 + d2Tdy2
        IF (imultispecies) THEN
-          integer, dimension(numscalar) :: handles_ims
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
                 !CALL transpose_y_to_z(phi2(:,:,:,is), phi3(:,:,:,is))
-                CALL transpose_y_to_z_start(handles(is),phi2(:,:,:,is), phi3(:,:,:,is),sbufphi2(:,:,:,is), rbufphi3(:,:,:,is))
+                CALL transpose_y_to_z_start(handles_ims(is),phi2(:,:,:,is), phi3(:,:,:,is),sbufphi2(:,:,:,is), rbufphi3(:,:,:,is))
              ENDIF
           ENDDO
        ENDIF
@@ -1082,6 +1102,17 @@ contains
        divu3(:,:,:) = zero
     ENDIF
 
+    deallocate(sbufta1)
+    deallocate(rbufta2)
+    deallocate(sbuftb1)
+    deallocate(rbuftb2)
+    deallocate(sbufphi2)
+    deallocate(rbufphi3)
+    deallocate(sbuftb2)
+    deallocate(rbuftb3)
+    deallocate(sbufta2)
+    deallocate(rbufta3)
+    deallocate(handles_ims)
   ENDSUBROUTINE calc_divu_constraint
 
   !############################################################################
@@ -1199,6 +1230,10 @@ contains
 
     drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * td1(:,:,:)
 
+    deallocate(sbufta3)
+    deallocate(rbuftb2)
+    deallocate(sbufta2)
+    deallocate(rbufte1)
   ENDSUBROUTINE birman_drhodt_corr
   !############################################################################
   !!
@@ -1417,6 +1452,8 @@ contains
       enddo
     enddo
 
+    deallocate(sbufuy1)
+    deallocate(rbufuy2)
   end subroutine tbl_flrt
 !############################################################################
 !!

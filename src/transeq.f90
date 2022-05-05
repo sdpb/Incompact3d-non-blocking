@@ -111,9 +111,9 @@ contains
     implicit none
 
     ! EAFIT - define rbuf and sbuf
-    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2, sbufuy1,rbufuy2, sbufuz1,rbufuz2
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufrho1,rbufrho2,sbufmu1,rbufmu2,sbufrho2,rbufrho3,sbufmu2,rbufmu3,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbuftd3,rbuftd2,sbufte3,rbufte2,sbuftf3,rbuftf2
     ! EAFIT - define handle mpi routine
-    integer, dimension(3) :: handles
+    integer, dimension(4) :: handles
 
     !! INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
@@ -133,6 +133,41 @@ contains
 
     allocate(sbufuz1(size(uz1,1), size(uz1,2), size(uz1,3)))
 	 allocate(rbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
+
+    allocate(sbufrho1(size(rho1,1), size(rho1,2), size(rho1,3), size(rho1,4)))
+    allocate(rbufrho2(size(rho2,1), size(rho2,2), size(rho2,3), size(rho2,4)))
+
+    allocate(sbufmu1(size(mu1,1), size(mu1,2), size(mu1,3)))
+    allocate(rbufmu2(size(mu2,1), size(mu2,2), size(mu2,3)))
+
+    allocate(sbufrho2(size(rho2,1), size(rho2,2), size(rho2,3)))
+    allocate(rbufrho3(size(rho3,1), size(rho3,2), size(rho3,3)))
+
+    allocate(sbufmu2(size(mu2,1), size(mu2,2), size(mu2,3)))
+    allocate(rbufmu3(size(mu3,1), size(mu3,2), size(mu3,3)))
+
+    allocate(sbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
+    allocate(rbufux3(size(ux3,1), size(ux3,2), size(ux3,3)))
+
+    allocate(sbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
+    allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
+
+    allocate(sbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
+    allocate(rbufuz3(size(uz3,1), size(uz3,2), size(uz3,3)))
+
+    allocate(sbuftd3(size(td3,1), size(td3,2), size(td3,3)))
+    allocate(rbuftd2(size(td2,1), size(td2,2), size(td2,3)))
+
+    allocate(sbufte3(size(te3,1), size(te3,2), size(te3,3)))
+    allocate(rbufte2(size(te2,1), size(te2,2), size(te2,3)))
+
+    allocate(sbuftf3(size(tf3,1), size(tf3,2), size(tf3,3)))
+    allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
+
+
+
+
+
 
 
 #ifdef DEBG 
@@ -166,6 +201,13 @@ contains
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
 
+        ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(1),ux1,ux2,sbufux1,rbufux2)
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(2),uy1,uy2,sbufuy1,rbufuy2)
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(3),uz1,uz2,sbufuz1,rbufuz2)
+
 #ifdef DEBG 
     avg_param = zero
     call avg3d (ta1, avg_param)
@@ -192,22 +234,28 @@ contains
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call derx (td1,rho1(:,:,:,1),di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1, zero)
+       ! EAFIT - Call transpose start
+       call transpose_x_to_y_start(handles(4),rho1(:,:,:,1),rho2,sbufrho1,rbufrho2)
        tg1(:,:,:) = tg1(:,:,:) + ux1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
        th1(:,:,:) = th1(:,:,:) + uy1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
        ti1(:,:,:) = ti1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
     endif
 
+    if (ilmn) then
+        ! EAFIT - Call transpose start
+        call transpose_x_to_y_start(handles(5),mu1,mu2,sbufmu1,rbufmu2)
+     else
+        rho2(:,:,:) = one
+     endif
+
     !call transpose_x_to_y(ux1,ux2)
     !call transpose_x_to_y(uy1,uy2)
     !call transpose_x_to_y(uz1,uz2)
 
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(1),ux1,ux2,sbufux1,rbufux2)
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(2),uy1,uy2,sbufuy1,rbufuy2)
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(3),uz1,uz2,sbufuz1,rbufuz2)
-
+    ! EAFIT - Call transpose wait
+    call transpose_x_to_y_wait(handles(1),ux1,ux2,sbufux1,rbufux2)
+    ! EAFIT - Call transpose wait
+    call transpose_x_to_y_wait(handles(2),uy1,uy2,sbufuy1,rbufuy2)
 
 
 #ifdef DEBG 
@@ -219,15 +267,16 @@ contains
     if (nrank == 0) write(*,*)'## SUB momentum_rhs_eq VAR uy2 (transpose) AVG ', avg_param
 #endif
 
-    if (ilmn) then
-       call transpose_x_to_y(rho1(:,:,:,1),rho2)
-       call transpose_x_to_y(mu1,mu2)
-    else
-       rho2(:,:,:) = one
-    endif
+
+    ! EAFIT - Call transpose wait
+    call transpose_x_to_y_wait(handles(3),uz1,uz2,sbufuz1,rbufuz2)
+
 
     !WORK Y-PENCILS
     if (ilmn) then
+      ! EAFIT - Call transpose wait
+      call transpose_x_to_y_wait(handles(4),rho1(:,:,:,1),rho2,sbufrho1,rbufrho2)
+
       td2(:,:,:) = rho2(:,:,:) * ux2(:,:,:) * uy2(:,:,:)
       te2(:,:,:) = rho2(:,:,:) * uy2(:,:,:) * uy2(:,:,:)
       tf2(:,:,:) = rho2(:,:,:) * uz2(:,:,:) * uy2(:,:,:)
@@ -248,6 +297,13 @@ contains
     call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
     call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+
+    ! EAFIT - Call transpose start       
+    call transpose_y_to_z_start(handles(6),ux2,ux3,sbufux2,rbufux3)
+    ! EAFIT - Call transpose start       
+    call transpose_y_to_z_start(handles(7),uy2,uy3,sbufuy2,rbufuy3)
+    ! EAFIT - Call transpose start       
+    call transpose_y_to_z_start(handles(8),uz2,uz3,sbufuz2,rbufuz3)
 
 #ifdef DEBG 
     avg_param = zero
@@ -275,20 +331,31 @@ contains
     if (ilmn) then
        !! Quasi-skew symmetric terms
        call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+
+       ! EAFIT - Call transpose start       
+       call transpose_y_to_z_start(handle(9),rho2,rho3,sbufrho2,rbufrho3)
        tg2(:,:,:) = tg2(:,:,:) + ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
        th2(:,:,:) = th2(:,:,:) + uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
        ti2(:,:,:) = ti2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
     endif
 
-    call transpose_y_to_z(ux2,ux3)
-    call transpose_y_to_z(uy2,uy3)
-    call transpose_y_to_z(uz2,uz3)
+
+    ! EAFIT - Call transpose wait       
+    call transpose_y_to_z_wait(handles(6),ux2,ux3,sbufux2,rbufux3)
+    ! EAFIT - Call transpose wait       
+    call transpose_y_to_z_wait(handles(7),uy2,uy3,sbufuy2,rbufuy3)
+    ! EAFIT - Call transpose wait       
+    call transpose_y_to_z_wait(handles(8),uz2,uz3,sbufuz2,rbufuz3)
 
     !WORK Z-PENCILS
     if (ilmn) then
-       call transpose_y_to_z(rho2,rho3)
-       call transpose_y_to_z(mu2,mu3)
 
+       ! EAFIT - Call transpose wait
+       call transpose_x_to_y_wait(handles(5),mu1,mu2,sbufmu1,rbufmu2)
+      ! EAFIT - Call transpose start
+       call transpose_y_to_z_start(handles(10),mu2,mu3,sbufmu2,rbufmu3)
+       ! EAFIT - Call transpose wait       
+       call transpose_y_to_z_wait(handles(9),rho2,rho3,sbufrho2,rbufrho3)
        td3(:,:,:) = rho3(:,:,:) * ux3(:,:,:) * uz3(:,:,:)
        te3(:,:,:) = rho3(:,:,:) * uy3(:,:,:) * uz3(:,:,:)
        tf3(:,:,:) = rho3(:,:,:) * uz3(:,:,:) * uz3(:,:,:)
@@ -352,24 +419,37 @@ contains
 
     ! Add convective and diffusive terms of z-pencil (half for skew-symmetric)
     if (ilmn) then
+      ! EAFIT - Call transpose wait       
+      call transpose_y_to_z_wait(handles(10),mu2,mu3,sbufmu2,rbufmu3)
+
+      !WORK Y-PENCILS
       td3(:,:,:) = mu3(:,:,:) * xnu*ta3(:,:,:) - half * td3(:,:,:)
+      ! EAFIT - Call transpose start       
+      call transpose_z_to_y_start(handles(11),td3,td2,sbuftd3,rbuftd2)
       te3(:,:,:) = mu3(:,:,:) * xnu*tb3(:,:,:) - half * te3(:,:,:)
+      ! EAFIT - Call transpose start       
+      call transpose_z_to_y_start(handles(12),te3,te2,sbufte3,rbufte2)
       tf3(:,:,:) = mu3(:,:,:) * xnu*tc3(:,:,:) - half * tf3(:,:,:)
+      ! EAFIT - Call transpose start       
+      call transpose_z_to_y_start(handles(13),tf3,tf2,sbuftf3,rbuftf2)
     else
       td3(:,:,:) = xnu*ta3(:,:,:) - half * td3(:,:,:)
       te3(:,:,:) = xnu*tb3(:,:,:) - half * te3(:,:,:)
       tf3(:,:,:) = xnu*tc3(:,:,:) - half * tf3(:,:,:)
     endif
 
-    !WORK Y-PENCILS
-    call transpose_z_to_y(td3,td2)
-    call transpose_z_to_y(te3,te2)
-    call transpose_z_to_y(tf3,tf2)
-
+    
     ! Convective terms of y-pencil (tg2,th2,ti2) and sum of convective and diffusive terms of z-pencil (td2,te2,tf2) are now in tg2, th2, ti2 (half for skew-symmetric)
+    ! EAFIT - Call transpose wait       
+    call transpose_z_to_y_wait(handles(11),td3,td2,sbuftd3,rbuftd2)
     tg2(:,:,:) = td2(:,:,:) - half * tg2(:,:,:)
+    ! EAFIT - Call transpose wait       
+    call transpose_z_to_y_wait(handles(12),te3,te2,sbufte3,rbufte2)
     th2(:,:,:) = te2(:,:,:) - half * th2(:,:,:)
+    ! EAFIT - Call transpose wait       
+    call transpose_z_to_y_wait(handles(13),tf3,tf2,sbuftf3,rbuftf2)
     ti2(:,:,:) = tf2(:,:,:) - half * ti2(:,:,:)
+
 #ifdef DEBG
     avg_param = zero
     call avg3d (tg2, avg_param)
@@ -640,6 +720,46 @@ contains
     call avg3d (duz1, avg_param)
     if (nrank == 0) write(*,*)'## MomRHS Trip duz1 ', avg_param
 #endif
+
+    ! EAFIT - define allocates
+deallocate(sbufux1)
+deallocate(rbufux2)
+
+deallocate(sbufuy1)
+deallocate(rbufuy2)
+
+deallocate(sbufuz1)
+deallocate(rbufuz2)
+
+deallocate(sbufrho1)
+deallocate(rbufrho2)
+
+deallocate(sbufmu1)
+deallocate(rbufmu2)
+
+deallocate(sbufrho2)
+deallocate(rbufrho3)
+
+deallocate(sbufmu2)
+deallocate(rbufmu3)
+
+deallocate(sbufux2)
+deallocate(rbufux3)
+
+deallocate(sbufuy2)
+deallocate(rbufuy3)
+
+deallocate(sbufuz2)
+deallocate(rbufuz3)
+
+deallocate(sbuftd3)
+deallocate(rbuftd2)
+
+deallocate(sbufte3)
+deallocate(rbufte2)
+
+deallocate(sbuftf3)
+deallocate(rbuftf2)
 
   end subroutine momentum_rhs_eq
   !############################################################################

@@ -114,7 +114,7 @@ contains
     real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufrho1,rbufrho2,sbufmu1,rbufmu2,sbufrho2,rbufrho3,sbufmu2,rbufmu3,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbuftd3,rbuftd2,sbufte3,rbufte2,sbuftf3,rbuftf2,sbufta2,rbufta1,sbuftb2,rbuftb1,sbuftc2,rbuftc1
 
     ! real(mytype), allocatable, dimension(:,:,:,:) ::     ! EAFIT - define handle mpi routine
-    integer, dimension(15) :: handles
+    integer, dimension(16) :: handles
 
     !! INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
@@ -788,14 +788,14 @@ deallocate(rbufte2)
 deallocate(sbuftf3)
 deallocate(rbuftf2)
 
-allocate(sbufta2)
-allocate(rbufta1)
+deallocate(sbufta2)
+deallocate(rbufta1)
 
-allocate(sbuftb2)
-allocate(rbuftb1)
+deallocate(sbuftb2)
+deallocate(rbuftb1)
 
-allocate(sbuftc2)
-allocate(rbuftc1)
+deallocate(sbuftc2)
+deallocate(rbuftc1)
 
   end subroutine momentum_rhs_eq
   !############################################################################

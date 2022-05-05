@@ -310,6 +310,8 @@ contains
     real(mytype) :: tmax,tmoy,tmax1,tmoy1
     integer :: cn1, cn2, cn3
 
+
+    ! EAFIT - define allocates
     allocate(sbufpp1(size(pp1,1), size(pp1,2), size(pp1,3)))
     allocate(rbufduxdxp2(size(duxdxp2,1), size(duxdxp2,2), size(duxdxp2,3)))
 
@@ -360,14 +362,13 @@ contains
     
     ! EAFIT - Call transpose start
     call transpose_x_to_y_start(handles(1),pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
-    call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-
     ! EAFIT - Call transpose start
     call transpose_x_to_y_start(handles(2),pgy1,uyp2,sbufpgy1,rbufuyp2,ph4)
-    call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-
     ! EAFIT - Call transpose start
     call transpose_x_to_y_start(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
+
+    call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+    call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
     ! EAFIT - Call transpose wait
     call transpose_x_to_y_wait(handles(1),pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
@@ -381,21 +382,26 @@ contains
 
     !! Compute sum dudx + dvdy
     duydypi2(:,:,:) = duydypi2(:,:,:) + upi2(:,:,:)
+    ! EAFIT - Call transpose start
     call transpose_y_to_z_start(handles(4),duydypi2,duxydxyp3,sbufduydypi2,rbufduxydxyp3,ph3) !->NXM NYM NZ
-    
+
     ! EAFIT - Call transpose wait
     call transpose_x_to_y_wait(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
     call interyvp(upi2,uzp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
 
     ! ORIGINAL call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
     ! ORIGINAL call transpose_y_to_z(upi2,uzp3,ph3)
-
+    ! EAFIT - Call transpose start
     call transpose_y_to_z_start(handles(5),upi2,uzp3,sbufupi2,rbufuzp3,ph3) !->NXM NYM NZ
-    call transpose_y_to_z_wait(handles(4),duydypi2,duxydxyp3,sbufduydypi2,rbufduxydxyp3,ph3) !->NXM NYM NZ
+
+    ! EAFIT - Call transpose wait
+    call transpose_y_to_z_wait(handles(4),duydypi2,duxydxyp3,sbufduydypi2,rbufduxydxyp3,ph3)!->NXM NYM NZ
     !WORK Z-PENCILS
     call interzvp(pp3,duxydxyp3,dipp3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
          (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,1)
-    call transpose_y_to_z_wait(handles(5),upi2,uzp3,sbufupi2,rbufuzp3,ph3) !->NXM NYM NZ
+
+    ! EAFIT - Call transpose wait
+    call transpose_y_to_z_wait(handles(5),upi2,uzp3,sbufupi2,rbufuzp3,ph3)
     call derzvp(po3,uzp3,dipp3,sz,cfz6,csz6,cwz6,(ph1%zen(1)-ph1%zst(1)+1),&
          (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,0)
 

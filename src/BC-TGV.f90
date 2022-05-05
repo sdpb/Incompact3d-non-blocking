@@ -549,8 +549,8 @@ contains
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-    real(mytype), save, allocatable, dimension(:,:,:) :: sbufta3,rbuftd2,sbuftb3,rbufte2,sbuftc3,rbuftf2,sbuftd2,rbuftg1,
-    real(mytype), save, allocatable, dimension(:,:,:) :: sbuftb2,rbufte1,sbuftf2,rbufti1
+    real(mytype), allocatable, dimension(:,:,:) :: sbufta3,rbuftd2,sbuftb3,rbufte2,sbuftc3,rbuftf2,sbuftd2,rbuftg1,
+    real(mytype), allocatable, dimension(:,:,:) :: sbuftb2,rbufte1,sbuftf2,rbufti1
 
     ! EAFIT - Allocate rbuf and sbuf
     allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))

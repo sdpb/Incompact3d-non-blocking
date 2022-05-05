@@ -111,10 +111,9 @@ contains
     implicit none
 
     ! EAFIT - define rbuf and sbuf
-    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,rbufrho2,sbufmu1,rbufmu2,sbufrho2,rbufrho3,sbufmu2,rbufmu3,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbuftd3,rbuftd2,sbufte3,rbufte2,sbuftf3,rbuftf2
-    real(mytype), allocatable, dimension(:,:,:,:) :: sbufrho1
-    ! EAFIT - define handle mpi routine
-    integer, dimension(4) :: handles
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufrho1,rbufrho2,sbufmu1,rbufmu2,sbufrho2,rbufrho3,sbufmu2,rbufmu3,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbuftd3,rbuftd2,sbufte3,rbufte2,sbuftf3,rbuftf2
+    ! real(mytype), allocatable, dimension(:,:,:,:) ::     ! EAFIT - define handle mpi routine
+    integer, dimension(15) :: handles
 
     !! INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
@@ -143,8 +142,8 @@ contains
     allocate(rbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
 
     
-    allocate(sbufrho1(size(rho1,1), size(rho1,2), size(rho1,3), size(rho1,4)))
-    allocate(rbufrho2(size(rho2,1), size(rho2,2), size(rho2,3), size(rho2,4)))
+    allocate(sbufrho1(size(rho1,1), size(rho1,2), size(rho1,3)))
+    allocate(rbufrho2(size(rho2,1), size(rho2,2), size(rho2,3)))
 
     allocate(sbufmu1(size(mu1,1), size(mu1,2), size(mu1,3)))
     allocate(rbufmu2(size(mu2,1), size(mu2,2), size(mu2,3)))
@@ -330,7 +329,7 @@ contains
        call dery (te2,rho2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
 
        ! EAFIT - Call transpose start       
-       call transpose_y_to_z_start(handle(9),rho2,rho3,sbufrho2,rbufrho3)
+       call transpose_y_to_z_start(handles(9),rho2,rho3,sbufrho2,rbufrho3)
        tg2(:,:,:) = tg2(:,:,:) + ux2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
        th2(:,:,:) = th2(:,:,:) + uy2(:,:,:) * uy2(:,:,:) * te2(:,:,:)
        ti2(:,:,:) = ti2(:,:,:) + uz2(:,:,:) * uy2(:,:,:) * te2(:,:,:)

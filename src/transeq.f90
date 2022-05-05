@@ -111,7 +111,8 @@ contains
     implicit none
 
     ! EAFIT - define rbuf and sbuf
-    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufrho1,rbufrho2,sbufmu1,rbufmu2,sbufrho2,rbufrho3,sbufmu2,rbufmu3,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbuftd3,rbuftd2,sbufte3,rbufte2,sbuftf3,rbuftf2
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufrho1,rbufrho2,sbufmu1,rbufmu2,sbufrho2,rbufrho3,sbufmu2,rbufmu3,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbuftd3,rbuftd2,sbufte3,rbufte2,sbuftf3,rbuftf2,sbufta2,rbufta1,sbuftb2,rbuftb1,sbuftc2,rbuftc1
+
     ! real(mytype), allocatable, dimension(:,:,:,:) ::     ! EAFIT - define handle mpi routine
     integer, dimension(15) :: handles
 
@@ -171,6 +172,15 @@ contains
 
     allocate(sbuftf3(size(tf3,1), size(tf3,2), size(tf3,3)))
     allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
+
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
+
+    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
+
+    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
+    allocate(rbuftc1(size(tc1,1), size(tc1,2), size(tc1,3)))
 
     !SKEW SYMMETRIC FORM
     !WORK X-PENCILS
@@ -548,18 +558,32 @@ contains
     ! Add diffusive terms of y-pencil to convective and diffusive terms of y- and z-pencil
     if (ilmn) then
       ta2(:,:,:) = mu2(:,:,:) * xnu*td2(:,:,:) + tg2(:,:,:)
+      
+      ! EAFIT - Call transpose start    
+      call transpose_y_to_x_start(handles(14),ta2,ta1,sbufta2,rbufta1)
       tb2(:,:,:) = mu2(:,:,:) * xnu*te2(:,:,:) + th2(:,:,:)
+      ! EAFIT - Call transpose start
+      call transpose_y_to_x_start(handles(15),tb2,tb1,sbuftb2,rbuftb1)
       tc2(:,:,:) = mu2(:,:,:) * xnu*tf2(:,:,:) + ti2(:,:,:)
+      ! EAFIT - Call transpose start
+      call transpose_y_to_x_start(handles(16),tc2,tc1,sbuftc2,rbuftc1) !diff+conv. terms
     else
       ta2(:,:,:) = xnu*td2(:,:,:) + tg2(:,:,:)
+      ! EAFIT - Call transpose start
+      call transpose_y_to_x_start(handles(14),ta2,ta1,sbufta2,rbufta1)
       tb2(:,:,:) = xnu*te2(:,:,:) + th2(:,:,:)
+      ! EAFIT - Call transpose start
+      call transpose_y_to_x_start(handles(15),tb2,tb1,sbuftb2,rbuftb1)
       tc2(:,:,:) = xnu*tf2(:,:,:) + ti2(:,:,:)
+      ! EAFIT - Call transpose start
+      call transpose_y_to_x_start(handles(16),tc2,tc1,sbuftc2,rbuftc1) !diff+conv. terms
+
     endif
 
     !WORK X-PENCILS
-    call transpose_y_to_x(ta2,ta1)
-    call transpose_y_to_x(tb2,tb1)
-    call transpose_y_to_x(tc2,tc1) !diff+conv. terms
+    ! call transpose_y_to_x(ta2,ta1)
+    ! call transpose_y_to_x(tb2,tb1)
+    ! call transpose_y_to_x(tc2,tc1) !diff+conv. terms
 
     !DIFFUSIVE TERMS IN X
     call derxx (td1,ux1,di1,sx,sfx ,ssx ,swx ,xsize(1),xsize(2),xsize(3),0,ubcx)
@@ -588,9 +612,16 @@ contains
 #endif
 
     !FINAL SUM: DIFF TERMS + CONV TERMS
+    ! EAFIT - Call transpose wait
+    call transpose_y_to_x_wait(handles(14),ta2,ta1,sbufta2,rbufta1)
     dux1(:,:,:,1) = ta1(:,:,:) - half*tg1(:,:,:)  + td1(:,:,:)
+    ! EAFIT - Call transpose wait
+    call transpose_y_to_x_wait(handles(15),tb2,tb1,sbuftb2,rbuftb1)
     duy1(:,:,:,1) = tb1(:,:,:) - half*th1(:,:,:)  + te1(:,:,:)
+    ! EAFIT - Call transpose wait
+    call transpose_y_to_x_wait(handles(16),tc2,tc1,sbuftc2,rbuftc1)
     duz1(:,:,:,1) = tc1(:,:,:) - half*ti1(:,:,:)  + tf1(:,:,:)
+
 #ifdef DEBG
     avg_param = zero
     call avg3d (dux1, avg_param)
@@ -756,6 +787,15 @@ deallocate(rbufte2)
 
 deallocate(sbuftf3)
 deallocate(rbuftf2)
+
+allocate(sbufta2)
+allocate(rbufta1)
+
+allocate(sbuftb2)
+allocate(rbuftb1)
+
+allocate(sbuftc2)
+allocate(rbuftc1)
 
   end subroutine momentum_rhs_eq
   !############################################################################

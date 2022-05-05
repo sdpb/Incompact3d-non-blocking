@@ -17,6 +17,17 @@ def allocate_line(buf,var):
             print(", ", end="")
         print(f"size({var},{i+1})", end="")
     print("))")
+
+
+# FOR DEALLOCATE LINE
+def deallocate_line(buf):
+    print(f"    deallocate({buf})")
+
+
 print("ALLOCATE LINES:")
 allocate_line(sbuf, var_to_send)
 allocate_line(rbuf, var_to_recv)
+
+print("DEALLOCATE LINES:")
+deallocate_line(sbuf)
+deallocate_line(rbuf)

@@ -110,6 +110,11 @@ contains
 
     implicit none
 
+    ! EAFIT - define rbuf and sbuf
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2, sbufuy1,rbufuy2, sbufuz1,rbufuz2
+    ! EAFIT - define handle mpi routine
+    integer, dimension(3) :: handles
+
     !! INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
@@ -118,6 +123,17 @@ contains
 
     !! OUTPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dux1,duy1,duz1
+
+    ! EAFIT - define allocates
+    allocate(sbufux1(size(ux1,1), size(ux1,2), size(ux1,3)))
+	 allocate(rbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
+
+    allocate(sbufuy1(size(uy1,1), size(uy1,2), size(uy1,3)))
+	 allocate(rbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
+
+    allocate(sbufuz1(size(uz1,1), size(uz1,2), size(uz1,3)))
+	 allocate(rbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
+
 
 #ifdef DEBG 
     real(mytype) avg_param
@@ -181,9 +197,19 @@ contains
        ti1(:,:,:) = ti1(:,:,:) + uz1(:,:,:) * ux1(:,:,:) * td1(:,:,:)
     endif
 
-    call transpose_x_to_y(ux1,ux2)
-    call transpose_x_to_y(uy1,uy2)
-    call transpose_x_to_y(uz1,uz2)
+    !call transpose_x_to_y(ux1,ux2)
+    !call transpose_x_to_y(uy1,uy2)
+    !call transpose_x_to_y(uz1,uz2)
+
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(1),ux1,ux2,sbufux1,rbufux2)
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(2),uy1,uy2,sbufuy1,rbufuy2)
+    ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(3),uz1,uz2,sbufuz1,rbufuz2)
+
+
+
 #ifdef DEBG 
     avg_param = zero
     call avg3d (ux2, avg_param)

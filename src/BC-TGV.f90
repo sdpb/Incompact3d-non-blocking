@@ -552,8 +552,11 @@ contains
     real(mytype), allocatable, dimension(:,:,:) :: sbufta3,rbuftd2,sbuftb3,rbufte2,sbuftc3,rbuftf2,sbuftd2,rbuftg1,
     real(mytype), allocatable, dimension(:,:,:) :: sbuftb2,rbufte1,sbuftf2,rbufti1
 
-    ! EAFIT - Allocate rbuf and sbuf
-    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    character(len=32), intent(in) :: num
+
+    integer, dimension(30) :: handles
+
+        ! EAFIT - Allocate rbuf and sbuf
     allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
     allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
     allocate(rbufte2(size(te2,1), size(te2,2), size(te2,3)))
@@ -569,10 +572,6 @@ contains
     allocate(rbuftd1(size(td1,1), size(td1,2), size(td1,3)))
     allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
     allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
-
-    character(len=32), intent(in) :: num
-
-    integer, dimension(30) :: handles
 
     ! Write vorticity as an example of post processing
 

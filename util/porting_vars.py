@@ -11,7 +11,7 @@ print(f"DECLARATION LINE AND TO INSERT IN TRANSPOSE_START/END:\n\t {sbuf},{rbuf}
 
 # FOR ALLOCATE LINE
 def allocate_line(buf,var):
-    print(f"\tallocate({buf}(", end="")
+    print(f"    allocate({buf}(", end="")
     for i in range(int(dims)):
         if i != 0:
             print(", ", end="")

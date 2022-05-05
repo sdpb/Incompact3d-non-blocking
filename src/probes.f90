@@ -252,7 +252,7 @@ contains
     use var, only : nzmsize
     use variables, only : numscalar
     use variables, only : derx, dery, derz, derxs, derys, derzs
-    use var, only : transpose_x_to_y, transpose_y_to_z
+    use var, only : transpose_x_to_y, transpose_y_to_z, transpose_x_to_y_start, transpose_x_to_y_wait, transpose_y_to_z_start, transpose_y_to_z_wait
     use var, only : di1, di2, di3
     use var, only : ffx, ffxp, ffxS, ffxpS, fwxpS, fsx, fsxp, fsxpS, fsxS, fwx, fwxp, fwxS, sx
     use var, only : ffy, ffyp, ffyS, ffypS, fwypS, fsy, fsyp, fsypS, fsyS, fwy, fwyp, fwyS, sy, ppy
@@ -272,12 +272,26 @@ contains
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3)) :: ux1, uy1, uz1
     real(mytype), intent(in),dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress) :: pp3
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
+    ! EAFIT - Define sbuf and rbuf
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3
+    real(mytype), allocatable, dimension(:,:,:,:) :: sbufphi2,rbufphi3
+    integer, dimension(10) :: handles
 
     integer :: iounit, i, FS, FSP, is
     character(len=100) :: fileformat, fileformatP
     character(len=1),parameter :: NL=char(10) !new line character
     character(len=30) :: filename
     logical :: evensc
+
+    ! EAFIT - Allocate rbuf and sbuf
+    allocate(sbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
+    allocate(rbufux3(size(ux3,1), size(ux3,2), size(ux3,3)))
+    allocate(sbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
+    allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
+    allocate(sbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
+    allocate(rbufuz3(size(uz3,1), size(uz3,2), size(uz3,3)))
+    allocate(sbufphi2(size(phi2,1), size(phi2,2), size(phi2,3), size(phi2,4)))
+    allocate(rbufphi3(size(phi3,1), size(phi3,2), size(phi3,3), size(phi3,4)))
     
     if (nprobes.le.0) return
 
@@ -339,20 +353,29 @@ contains
           call transpose_x_to_y(ux1,ux2)
           call transpose_x_to_y(uy1,uy2)
           call transpose_x_to_y(uz1,uz2)
-          call transpose_y_to_z(ux2,ux3)
-          call transpose_y_to_z(uy2,uy3)
-          call transpose_y_to_z(uz2,uz3)
+          call transpose_y_to_z_start(handles(1),ux2,ux3,sbufux2,rbufux3)
+          call transpose_y_to_z_start(handles(2),uy2,uy3,sbufuy2,rbufuy3)
+          call transpose_y_to_z_start(handles(3),uz2,uz3,sbufuz2,rbufuz3)
           sync_vel_needed = .false.
        endif
        ! Compute velocity gradient
        call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
        call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+       if (sync_vel_needed) then
+         call transpose_y_to_z_wait(handles(1),ux2,ux3,sbufux2,rbufux3)
+       endif
        call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
        call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
        call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+       if (sync_vel_needed) then
+         call transpose_y_to_z_wait(handles(2),uy2,uy3,sbufuy2,rbufuy3)
+       endif
        call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
        call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
        call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+       if (sync_vel_needed) then
+         call transpose_y_to_z_wait(handles(3),uz2,uz3,sbufuz2,rbufuz3)
+       endif
        call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
        ! Store velocity gradient
        call write_extra_probes_vel(ta1, td2, td3, tb1, te2, te3, tc1, tf2, tf3)
@@ -370,12 +393,15 @@ contains
           ! Perform communications if needed
           if (sync_scal_needed) then
              call transpose_x_to_y(phi1(:,:,:,is),phi2(:,:,:,is))
-             call transpose_y_to_z(phi2(:,:,:,is),phi3(:,:,:,is))
+             call transpose_y_to_z_start(handles(4),phi2(:,:,:,is),phi3(:,:,:,is),sbufphi2,rbufphi3)
           endif
           ! Compute derivative
           if (evensc) then
              call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxpS,fsxpS,fwxpS,xsize(1),xsize(2),xsize(3),1,zero)
              call deryS (tc2,phi2(:,:,:,is),di2,sy,ffypS,fsypS,fwypS,ppy,ysize(1),ysize(2),ysize(3),1,zero)
+             if (sync_vel_needed) then
+               call transpose_y_to_z_wait(handles(4),phi2(:,:,:,is),phi3(:,:,:,is),sbufphi2,rbufphi3)
+             endif
              call derzS (tb3,phi3(:,:,:,is),di3,sz,ffzpS,fszpS,fwzpS,zsize(1),zsize(2),zsize(3),1,zero)
           else
              call derxS (tb1,phi1(:,:,:,is),di1,sx,ffxS,fsxS,fwxS,xsize(1),xsize(2),xsize(3),0,zero)

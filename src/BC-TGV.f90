@@ -270,7 +270,7 @@ contains
 
     ! EAFIT - Define rbuf and sbuf
     real(mytype), allocatable, dimension(:,:,:) :: sbuftf2,rbufti1,sbuftb2,rbufte1,sbufta3,rbuftd2,sbufta2,rbuftd1,sbuftc2,rbuftf1,sbuftd2,rbuftg1
-    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufux2,rbufux3,sbufuy2,rbufuy3,rbufte2,
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufux2,rbufux3,sbufuy2,rbufuy3,rbufte2,rbuftf2
 
     real(mytype) :: eek, enst, eps, eps2
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
@@ -278,7 +278,7 @@ contains
     integer :: i,j,k,is,code,nvect1
     character(len=30) :: filename
 
-        ! EAFIT - Allocate rbuf and sbuf
+    ! EAFIT - Allocate rbuf and sbuf
     allocate(sbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
     allocate(rbufti1(size(ti1,1), size(ti1,2), size(ti1,3)))
     allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
@@ -299,6 +299,8 @@ contains
     allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
     allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
     allocate(rbufte2(size(te2,1), size(te2,2), size(te2,3)))
+    allocate(sbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
+    allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
 
     if (nclx1==1.and.xend(1)==nx) then
        xsize1=xsize(1)-1

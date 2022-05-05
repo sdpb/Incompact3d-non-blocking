@@ -38,8 +38,6 @@ module decomp_2d_poisson
   use param
   use variables
 
-  integer, dimension(30) :: handles
-
   implicit none
 
   private        ! Make everything private unless declared public
@@ -78,6 +76,7 @@ module decomp_2d_poisson
 
   ! EAFIT - allocate rbuf and sbuf
   real(mytype), allocatable, dimension(:,:,:) :: sbufrw2b,rbufrhs
+  integer, dimension(30) :: handles
 
   ! underlying FFT library only needs to be initialised once
   logical, save :: fft_initialised = .false.

@@ -270,7 +270,7 @@ contains
 
     ! EAFIT - Define rbuf and sbuf
     real(mytype), allocatable, dimension(:,:,:) :: sbuftf2,rbufti1,sbuftb2,rbufte1,sbufta3,rbuftd2,sbufta2,rbuftd1,sbuftc2,rbuftf1,sbuftd2,rbuftg1
-    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufux2,rbufux3,sbufuy2,rbufuy3
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufux2,rbufux3,sbufuy2,rbufuy3,rbufte2,
 
     real(mytype) :: eek, enst, eps, eps2
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
@@ -297,6 +297,8 @@ contains
     allocate(rbufux3(size(ux3,1), size(ux3,2), size(ux3,3)))
     allocate(sbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
     allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
+    allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
+    allocate(rbufte2(size(te2,1), size(te2,2), size(te2,3)))
 
     if (nclx1==1.and.xend(1)==nx) then
        xsize1=xsize(1)-1
@@ -550,7 +552,7 @@ contains
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
     real(mytype), allocatable, dimension(:,:,:) :: sbufta3,rbuftd2,sbuftb3,rbufte2,sbuftc3,rbuftf2,sbuftd2,rbuftg1,sbufte2
-    real(mytype), allocatable, dimension(:,:,:) :: rbufth1,sbuftb2,rbufte1,sbuftf2,rbufti1,sbufta2,rbuftd1
+    real(mytype), allocatable, dimension(:,:,:) :: rbufth1,sbuftb2,rbufte1,sbuftf2,rbufti1,sbufta2,rbuftd1,rbuftf1
 
     character(len=32), intent(in) :: num
 
@@ -572,6 +574,8 @@ contains
     allocate(rbuftd1(size(td1,1), size(td1,2), size(td1,3)))
     allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
     allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
+    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
+    allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
 
     ! Write vorticity as an example of post processing
 

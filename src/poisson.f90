@@ -1066,6 +1066,9 @@ contains
 
     !  call decomp_2d_fft_finalize
 
+    deallocate(sbufrw2b)
+    deallocate(rbufrhs)
+
     return
   end subroutine poisson_010
 

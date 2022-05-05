@@ -266,6 +266,32 @@ contains
     real(mytype) :: mp(numscalar),mps(numscalar),vl,es,es1,ek,ek1,ds,ds1
     real(mytype) :: temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9
 
+    integer, dimension(25) :: handles
+
+    ! EAFIT - Define rbuf and sbuf
+    real(mytype), allocatable, dimension(:,:,:) :: sbuftf2,rbufti1,sbuftb2,rbufte1,sbufta3,rbuftd2,sbufta2,rbuftd1,sbuftc2,rbuftf1,sbuftd2,rbuftg1
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufux2,rbufux3,sbufuy2,rbufuy3
+    
+    ! EAFIT - Allocate rbuf and sbuf
+    allocate(sbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
+    allocate(rbufti1(size(ti1,1), size(ti1,2), size(ti1,3)))
+    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
+    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(rbuftd2(size(td2,1), size(td2,2), size(td2,3)))
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbuftd1(size(td1,1), size(td1,2), size(td1,3)))
+    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
+    allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
+    allocate(sbuftd2(size(td2,1), size(td2,2), size(td2,3)))
+    allocate(rbuftg1(size(tg1,1), size(tg1,2), size(tg1,3)))
+    allocate(sbufux1(size(ux1,1), size(ux1,2), size(ux1,3)))
+    allocate(rbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
+    allocate(sbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
+    allocate(rbufux3(size(ux3,1), size(ux3,2), size(ux3,3)))
+    allocate(sbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
+    allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
+
     real(mytype) :: eek, enst, eps, eps2
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
 
@@ -309,12 +335,13 @@ contains
 
        ! Perform communications if needed
        if (sync_vel_needed) then
-         call transpose_x_to_y(ux1,ux2)
+         call transpose_x_to_y_start(handles(15),ux1,ux2,sbufux1,rbufux2)
          call transpose_x_to_y(uy1,uy2)
          call transpose_x_to_y(uz1,uz2)
-         call transpose_y_to_z(ux2,ux3)
-         call transpose_y_to_z(uy2,uy3)
-         call transpose_y_to_z(uz2,uz3)
+         call transpose_x_to_y_wait(handles(15),ux1,ux2,sbufux1,rbufux2)
+         call transpose_y_to_z_start(handles(16),ux2,ux3,sbufux2,rbufux3)
+         call transpose_y_to_z_start(handles(17),uy2,uy3,sbufuy2,rbufuy3)
+         call transpose_y_to_z_start(handles(18),uz2,uz3,sbufuz2,rbufuz3)
          sync_vel_needed = .false.
        endif
 
@@ -325,26 +352,47 @@ contains
        call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
        !y-derivatives
        call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+       call transpose_y_to_x_start(handles(5),ta2,td1,sbufta2,rbuftd1)
        call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-       call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-       !!z-derivatives
-       call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-       call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-       call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
-       !!all back to x-pencils
-       call transpose_z_to_y(ta3,td2)
-       call transpose_z_to_y(tb3,te2)
-       call transpose_z_to_y(tc3,tf2)
-       call transpose_y_to_x(td2,tg1)
-       call transpose_y_to_x(te2,th1)
-       call transpose_y_to_x(tf2,ti1)
-       call transpose_y_to_x(ta2,td1)
-       call transpose_y_to_x(tb2,te1)
-       call transpose_y_to_x(tc2,tf1)
-       !du/dx=ta1 du/dy=td1 and du/dz=tg1
-       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
 
+       ! EAFIT - Call transpose start
+       call transpose_y_to_x_start(handles(2),tb2,te1,sbuftb2,rbufte1)
+
+       call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+       call transpose_y_to_x_start(handles(6),tc2,tf1,sbuftc2,rbuftf1)
+       !!z-derivatives
+       if (sync_vel_needed) then
+         call transpose_y_to_z_wait(handles(16),ux2,ux3,sbufux2,rbufux3)
+       endif
+       call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+
+       !!all back to x-pencils
+       call transpose_z_to_y_start(handles(3),ta3,td2,sbufta3,rbuftd2)
+       if (sync_vel_needed) then
+         call transpose_y_to_z_wait(handles(17),uy2,uy3,sbufuy2,rbufuy3)
+       endif
+       call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+       call transpose_z_to_y_start(handles(4),tb3,te2,sbuftb3,rbufte2)
+       if (sync_vel_needed) then
+         call transpose_y_to_z_wait(handles(18),uz2,uz3,sbufuz2,rbufuz3)
+       endif
+       call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+
+       call transpose_z_to_y(tc3,tf2)
+
+       ! EAFIT - Call transpose start
+       call transpose_y_to_x_start(handles(1),tf2,ti1,sbuftf2,rbufti1)
+
+       call transpose_z_to_y_wait(handles(3),ta3,td2,sbufta3,rbuftd2)
+       call transpose_y_to_x(td2,tg1)
+
+       call transpose_z_to_y_wait(handles(4),tb3,te2,sbuftb3,rbufte2)
+       call transpose_y_to_x(te2,th1)
+
+
+
+       call transpose_y_to_x_wait(handles(5),ta2,td1,sbufta2,rbuftd1)
+       call transpose_y_to_x_wait(handles(6),tc2,tf1,sbuftc2,rbuftf1)
        !SPATIALLY-AVERAGED ENSTROPHY
        temp1=zero
        do k=1,xsize3
@@ -358,6 +406,12 @@ contains
        enddo
        call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        enst=enst/(nxc*nyc*nzc)
+
+       ! EAFIT - Call transpose wait
+       call transpose_y_to_x_start(handles(2),tb2,te1,sbuftb2,rbufte1)
+
+       ! EAFIT - Call transpose wait
+       call transpose_y_to_x_wait(handles(1),tf2,ti1,sbuftf2,rbufti1)
        
        !SPATIALLY-AVERAGED ENERGY DISSIPATION
        temp1=zero
@@ -395,26 +449,36 @@ contains
        call derxx (tb1,uy1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcy)
        call derxx (tc1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcz)
        !y-derivatives
-       call deryy (ta2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx) 
-       call deryy (tb2,uy2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,ubcy) 
-       call deryy (tc2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz) 
+       call deryy (ta2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
+       call transpose_y_to_x_start(handles(10),ta2,td1,sbufta2,rbuftd1) 
+       call deryy (tb2,uy2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,ubcy)
+       call transpose_y_to_x_start(handles(11),tb2,te1,sbuftb2,rbufte1) 
+       call deryy (tc2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz)
+       call transpose_y_to_x_start(handles(12),tc2,tf1,sbuftc2,rbuftf1) 
        !!z-derivatives
        call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+       call transpose_z_to_y_start(handles(7),ta3,td2,sbufta3,rbuftd2)
        call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+       call transpose_z_to_y_start(handles(8),tb3,te2,sbuftb3,rbufte2)
        call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,ubcz)
-       !!all back to x-pencils
-       call transpose_z_to_y(ta3,td2)
-       call transpose_z_to_y(tb3,te2)
-       call transpose_z_to_y(tc3,tf2)
-       call transpose_y_to_x(td2,tg1)
-       call transpose_y_to_x(te2,th1)
+       !!all back to x-pencils 
+       call transpose_z_to_y_start(handles(9),tc3,tf2,sbuftc3,rbuftf2)
+       call transpose_z_to_y_wait(handles(7),ta3,td2,sbufta3,rbuftd2)
+       call transpose_y_to_x_start(handles(13),td2,tg1,sbuftd2,rbuftg1)
+       call transpose_z_to_y_wait(handles(8),tb3,te2,sbuftb3,rbufte2)
+       call transpose_y_to_x_start(handles(14),te2,th1,sbufte2,rbufth1)
+       call transpose_z_to_y_wait(handles(9),tc3,tf2,sbuftc3,rbuftf2)
        call transpose_y_to_x(tf2,ti1)
-       call transpose_y_to_x(ta2,td1)
-       call transpose_y_to_x(tb2,te1)
-       call transpose_y_to_x(tc2,tf1)
+       
        !d2u/dx2=ta1 d2u/dy2=td1 and d2u/dz2=tg1
        !d2v/dx2=tb1 d2v/dy2=te1 and d2v/dz2=th1
        !d2w/dx2=tc1 d2w/dy2=tf1 and d2w/dz2=ti1
+
+       call transpose_y_to_x_wait(handles(10),ta2,td1,sbufta2,rbuftd1)
+       call transpose_y_to_x_wait(handles(11),tb2,te1,sbuftb2,rbufte1)
+       call transpose_y_to_x_wait(handles(12),tc2,tf1,sbuftc2,rbuftf1)
+       call transpose_y_to_x_wait(handles(14),te2,th1,sbufte2,rbufth1)
+       call transpose_y_to_x_wait(handles(13),td2,tg1,sbuftd2,rbuftg1) 
        !SPATIALLY-AVERAGED ENERGY DISSIPATION WITH SECOND DERIVATIVES
        temp1=zero
        di1  =zero
@@ -485,7 +549,30 @@ contains
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype), save, allocatable, dimension(:,:,:) :: sbufta3,rbuftd2,sbuftb3,rbufte2,sbuftc3,rbuftf2,sbuftd2,rbuftg1,
+    real(mytype), save, allocatable, dimension(:,:,:) :: sbuftb2,rbufte1,sbuftf2,rbufti1
+
+    ! EAFIT - Allocate rbuf and sbuf
+    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
+    allocate(rbufte2(size(te2,1), size(te2,2), size(te2,3)))
+    allocate(sbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
+    allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
+    allocate(sbuftd2(size(td2,1), size(td2,2), size(td2,3)))
+    allocate(rbuftg1(size(tg1,1), size(tg1,2), size(tg1,3)))
+    allocate(sbufte2(size(te2,1), size(te2,2), size(te2,3)))
+    allocate(rbufth1(size(th1,1), size(th1,2), size(th1,3)))
+    allocate(sbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
+    allocate(rbufti1(size(ti1,1), size(ti1,2), size(ti1,3)))
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbuftd1(size(td1,1), size(td1,2), size(td1,3)))
+    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
+
     character(len=32), intent(in) :: num
+
+    integer, dimension(30) :: handles
 
     ! Write vorticity as an example of post processing
 
@@ -506,27 +593,37 @@ contains
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     !y-derivatives
     call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call transpose_y_to_x_start(handles(7),ta2,td1,sbufta2,rbuftd1)
     call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call transpose_y_to_x_start(handles(8),tb2,te1,sbuftb2,rbufte1)
     call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    call transpose_y_to_x_start(handles(9),tc2,tf1,sbuftc2,rbuftf1)
     !!z-derivatives
     call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call transpose_z_to_y_start(handles(1),ta3,td2,sbufta3,rbuftd2)
     call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call transpose_z_to_y_start(handles(2),tb3,te2,sbuftb3,rbufte2)
     call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     !!all back to x-pencils
-    call transpose_z_to_y(ta3,td2)
-    call transpose_z_to_y(tb3,te2)
-    call transpose_z_to_y(tc3,tf2)
-    call transpose_y_to_x(td2,tg1)
-    call transpose_y_to_x(te2,th1)
-    call transpose_y_to_x(tf2,ti1)
-    call transpose_y_to_x(ta2,td1)
-    call transpose_y_to_x(tb2,te1)
-    call transpose_y_to_x(tc2,tf1)
+    
+    
+    call transpose_z_to_y_start(handles(3),tc3,tf2,sbuftc3,rbuftf2)
+    call transpose_z_to_y_wait(handles(1),ta3,td2,sbufta3,rbuftd2)
+    call transpose_y_to_x_start(handles(4),td2,tg1,sbuftd2,rbuftg1)
+    call transpose_z_to_y_wait(handles(2),tb3,te2,sbuftb3,rbufte2)
+    call transpose_y_to_x_start(handles(5),te2,th1,sbufte2,rbufth1)
+    call transpose_z_to_y_wait(handles(3),tc3,tf2,sbuftc3,rbuftf2)
+    call transpose_y_to_x_start(handles(6),tf2,ti1,sbuftf2,rbufti1)
+    
     !du/dx=ta1 du/dy=td1 and du/dz=tg1
     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
     !VORTICITY FIELD
     di1 = zero
+    call transpose_y_to_x_wait(handles(5),te2,th1,sbufte2,rbufth1)
+    call transpose_y_to_x_wait(handles(4),td2,tg1,sbuftd2,rbuftg1)
+    call transpose_y_to_x_wait(handles(7),ta2,td1,sbufta2,rbuftd1)
+    call transpose_y_to_x_wait(handles(9),tc2,tf1,sbuftc2,rbuftf1)
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
@@ -534,6 +631,8 @@ contains
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
+    call transpose_y_to_x_wait(handles(8),tb2,te1,sbuftb2,rbufte1)
+    call transpose_y_to_x_wait(handles(6),tf2,ti1,sbuftf2,rbufti1)
     di1(:,:,: ) = - 0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &

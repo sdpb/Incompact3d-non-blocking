@@ -38,6 +38,8 @@ module decomp_2d_poisson
   use param
   use variables
 
+  integer, dimension(30) :: handles
+
   implicit none
 
   private        ! Make everything private unless declared public
@@ -73,6 +75,9 @@ module decomp_2d_poisson
   !                    1 = X-pencil; 2 = Y-pencil; 3 = Z-pencil
   real(mytype), allocatable, dimension(:,:,:) :: rw1,rw1b,rw2,rw2b,rw3
   complex(mytype), allocatable, dimension(:,:,:) :: cw1,cw1b,cw2,cw22,cw2b,cw2c
+
+  ! EAFIT - allocate rbuf and sbuf
+  real(mytype), allocatable, dimension(:,:,:) :: sbufrw2b,rbufrhs
 
   ! underlying FFT library only needs to be initialised once
   logical, save :: fft_initialised = .false.
@@ -719,6 +724,10 @@ contains
 
     real(mytype) :: avg_param
 
+    ! EAFIT - allocate rbuf and sbuf
+    allocate(sbufrw2b(size(rw2b,1), size(rw2b,2), size(rw2b,3)))
+    allocate(rbufrhs(size(rhs,1), size(rhs,2), size(rhs,3)))
+
 100 format(1x,a8,3I4,2F12.6)
 
     nx = nx_global
@@ -740,12 +749,16 @@ contains
           enddo
        enddo
     end do
-    call transpose_y_to_z(rw2b,rhs,ph)
+    ! EAFIT - Call transpose start
+    call transpose_y_to_z_start(handles(1),rw2b,rhs,sbufrw2b,rbufrhs,ph)
 
     if (.not. fft_initialised) then
        call decomp_2d_fft_init(PHYSICAL_IN_Z,nx,ny,nz)
        fft_initialised = .true.
     end if
+    
+    ! EAFIT - Call transpose wait
+    call transpose_y_to_z_wait(handles(1),rw2b,rhs,sbufrw2b,rbufrhs,ph)
     ! compute r2c transform 
     call decomp_2d_fft_3d(rhs,cw1)
 

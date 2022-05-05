@@ -111,7 +111,8 @@ contains
     implicit none
 
     ! EAFIT - define rbuf and sbuf
-    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufrho1,rbufrho2,sbufmu1,rbufmu2,sbufrho2,rbufrho3,sbufmu2,rbufmu3,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbuftd3,rbuftd2,sbufte3,rbufte2,sbuftf3,rbuftf2
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,rbufrho2,sbufmu1,rbufmu2,sbufrho2,rbufrho3,sbufmu2,rbufmu3,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbuftd3,rbuftd2,sbufte3,rbufte2,sbuftf3,rbuftf2
+    real(mytype), allocatable, dimension(:,:,:,:) :: sbufrho1
     ! EAFIT - define handle mpi routine
     integer, dimension(4) :: handles
 
@@ -126,14 +127,15 @@ contains
 
     ! EAFIT - define allocates
     allocate(sbufux1(size(ux1,1), size(ux1,2), size(ux1,3)))
-	 allocate(rbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
+    allocate(rbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
 
     allocate(sbufuy1(size(uy1,1), size(uy1,2), size(uy1,3)))
-	 allocate(rbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
+    allocate(rbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
 
     allocate(sbufuz1(size(uz1,1), size(uz1,2), size(uz1,3)))
-	 allocate(rbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
+    allocate(rbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
 
+    
     allocate(sbufrho1(size(rho1,1), size(rho1,2), size(rho1,3), size(rho1,4)))
     allocate(rbufrho2(size(rho2,1), size(rho2,2), size(rho2,3), size(rho2,4)))
 

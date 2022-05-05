@@ -291,9 +291,9 @@ contains
     implicit none
 
     ! EAFIT - define rbuf and sbuf
-    real(mytype), allocatable, dimension(:,:,:) :: sbufpp1,sbufpgy1,sbufpgz1,rbufduxdxp2,rbufuyp2,rbufuzp2
+    real(mytype), allocatable, dimension(:,:,:) :: sbufpp1,sbufpgy1,sbufpgz1,rbufduxdxp2,rbufuyp2,rbufuzp2,sbufduydypi2,rbufduxydxyp3,sbufupi2,rbufuzp3
     ! EAFIT - define handle mpi routine
-    integer, dimension(3) :: handles
+    integer, dimension(5) :: handles
 
     !  TYPE(DECOMP_INFO) :: ph1,ph3,ph4
 
@@ -310,14 +310,19 @@ contains
     real(mytype) :: tmax,tmoy,tmax1,tmoy1
     integer :: cn1, cn2, cn3
 
+
+    ! EAFIT - define allocates
     allocate(sbufpp1(size(pp1,1), size(pp1,2), size(pp1,3)))
     allocate(rbufduxdxp2(size(duxdxp2,1), size(duxdxp2,2), size(duxdxp2,3)))
-
     allocate(sbufpgy1(size(pgy1,1), size(pgy1,2), size(pgy1,3)))
     allocate(rbufuyp2(size(uyp2,1), size(uyp2,2), size(uyp2,3)))
-
     allocate(sbufpgz1(size(pgz1,1), size(pgz1,2), size(pgz1,3)))
     allocate(rbufuzp2(size(uzp2,1), size(uzp2,2), size(uzp2,3)))
+    allocate(sbufduydypi2(size(duydypi2,1), size(duydypi2,2), size(duydypi2,3)))
+    allocate(rbufduxydxyp3(size(duxydxyp3,1), size(duxydxyp3,2), size(duxydxyp3,3)))
+    allocate(sbufupi2(size(upi2,1), size(upi2,2), size(upi2,3)))
+    allocate(rbufuzp3(size(uzp3,1), size(uzp3,2), size(uzp3,3)))
+
 
     nvect3=(ph1%zen(1)-ph1%zst(1)+1)*(ph1%zen(2)-ph1%zst(2)+1)*nzmsize
 
@@ -353,14 +358,13 @@ contains
     
     ! EAFIT - Call transpose start
     call transpose_x_to_y_start(handles(1),pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
-    call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-
     ! EAFIT - Call transpose start
     call transpose_x_to_y_start(handles(2),pgy1,uyp2,sbufpgy1,rbufuyp2,ph4)
-    call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
-
     ! EAFIT - Call transpose start
     call transpose_x_to_y_start(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
+
+    call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+    call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
 
     ! EAFIT - Call transpose wait
     call transpose_x_to_y_wait(handles(1),pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
@@ -374,17 +378,26 @@ contains
 
     !! Compute sum dudx + dvdy
     duydypi2(:,:,:) = duydypi2(:,:,:) + upi2(:,:,:)
-    
+    ! EAFIT - Call transpose start
+    call transpose_y_to_z_start(handles(4),duydypi2,duxydxyp3,sbufduydypi2,rbufduxydxyp3,ph3) !->NXM NYM NZ
+
     ! EAFIT - Call transpose wait
     call transpose_x_to_y_wait(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
     call interyvp(upi2,uzp2,dipp2,sy,cifyp6,cisyp6,ciwyp6,(ph1%yen(1)-ph1%yst(1)+1),ysize(2),nymsize,ysize(3),1)
 
-    call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
-    call transpose_y_to_z(upi2,uzp3,ph3)
+    ! ORIGINAL call transpose_y_to_z(duydypi2,duxydxyp3,ph3)!->NXM NYM NZ
+    ! ORIGINAL call transpose_y_to_z(upi2,uzp3,ph3)
+    ! EAFIT - Call transpose start
+    call transpose_y_to_z_start(handles(5),upi2,uzp3,sbufupi2,rbufuzp3,ph3) !->NXM NYM NZ
 
+    ! EAFIT - Call transpose wait
+    call transpose_y_to_z_wait(handles(4),duydypi2,duxydxyp3,sbufduydypi2,rbufduxydxyp3,ph3)!->NXM NYM NZ
     !WORK Z-PENCILS
     call interzvp(pp3,duxydxyp3,dipp3,sz,cifzp6,ciszp6,ciwzp6,(ph1%zen(1)-ph1%zst(1)+1),&
          (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,1)
+
+    ! EAFIT - Call transpose wait
+    call transpose_y_to_z_wait(handles(5),upi2,uzp3,sbufupi2,rbufuzp3,ph3)
     call derzvp(po3,uzp3,dipp3,sz,cfz6,csz6,cwz6,(ph1%zen(1)-ph1%zst(1)+1),&
          (ph1%zen(2)-ph1%zst(2)+1),zsize(3),nzmsize,0)
 
@@ -419,6 +432,16 @@ contains
     endif
 
     return
+    deallocate(sbufpp1)
+    deallocate(rbufduxdxp2)
+    deallocate(sbufpgy1)
+    deallocate(rbufuyp2)
+    deallocate(sbufpgz1)
+    deallocate(rbufuzp2)
+    deallocate(sbufduydypi2)
+    deallocate(rbufduxydxyp3)
+    deallocate(sbufupi2)
+    deallocate(rbufuzp3)
   end subroutine divergence
   !############################################################################
   !subroutine GRADP
@@ -447,37 +470,65 @@ contains
     implicit none
 
     integer :: i,j,k
+    integer, dimension(5) :: handles
 
+    real(mytype),allocatable, dimension(:,:,:) :: sbufpgz3,rbufpgz2, sbufppi3,rbufpp2, sbufppi2,rbufpp1,sbufpgy2,rbufpgy1,sbufpgzi2,rbufpgz1
     real(mytype),dimension(ph3%zst(1):ph3%zen(1),ph3%zst(2):ph3%zen(2),nzmsize) :: pp3
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: px1,py1,pz1
+
+    allocate(sbufpgz3(size(pgz3,1), size(pgz3,2), size(pgz3,3)))
+    allocate(rbufpgz2(size(pgz2,1), size(pgz2,2), size(pgz2,3)))
+    allocate(sbufppi3(size(ppi3,1), size(ppi3,2), size(ppi3,3)))
+	 allocate(rbufpp2(size(pp2,1), size(pp2,2), size(pp2,3)))
+    allocate(sbufppi2(size(ppi2,1), size(ppi2,2), size(ppi2,3)))
+	 allocate(rbufpp1(size(pp1,1), size(pp1,2), size(pp1,3)))
+    allocate(sbufpgy2(size(pgy2,1), size(pgy2,2), size(pgy2,3)))
+	 allocate(rbufpgy1(size(pgy1,1), size(pgy1,2), size(pgy1,3)))
+	 allocate(sbufpgzi2(size(pgzi2,1), size(pgzi2,2), size(pgzi2,3)))
+	 allocate(rbufpgz1(size(pgz1,1), size(pgz1,2), size(pgz1,3)))
+
+
+
+
 
     !WORK Z-PENCILS
     call interzpv(ppi3,pp3,dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+    call transpose_z_to_y_start(handles(2), ppi3,pp2,sbufppi3,rbufpp2, ph3)
     call derzpv(pgz3,pp3,dip3,sz,cfip6z,csip6z,cwip6z,cfz6,csz6,cwz6,&
          (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+    call transpose_z_to_y_start(handles(1), pgz3,pgz2,sbufpgz3,rbufpgz2,ph3) !nxm nym nz
 
     !WORK Y-PENCILS
-    call transpose_z_to_y(pgz3,pgz2,ph3) !nxm nym nz
-    call transpose_z_to_y(ppi3,pp2,ph3)
+    !call transpose_z_to_y(pgz3,pgz2,ph3) !nxm nym nz
+    !call transpose_z_to_y(ppi3,pp2,ph3)
 
+    call transpose_z_to_y_wait(handles(2), ppi3,pp2,sbufppi3,rbufpp2, ph3)
     call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+    call transpose_y_to_x_start(handles(3), ppi2,pp1, sbufppi2,rbufpp1,ph2) !nxm ny nz
     call derypv(pgy2,pp2,dip2,sy,cfip6y,csip6y,cwip6y,cfy6,csy6,cwy6,ppy,&
          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+    call transpose_y_to_x_start(handles(4),pgy2,pgy1,sbufpgy2,rbufpgy1 ,ph2)
+    call transpose_z_to_y_wait(handles(1), pgz3,pgz2,sbufpgz3,rbufpgz2,ph3) !nxm nym nz
     call interypv(pgzi2,pgz2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
          (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+    call transpose_y_to_x_start(handles(5), pgzi2,pgz1, sbufpgzi2,rbufpgz1,ph2)
 
     !WORK X-PENCILS
 
-    call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
-    call transpose_y_to_x(pgy2,pgy1,ph2)
-    call transpose_y_to_x(pgzi2,pgz1,ph2)
+         ! ORIGINAL
+    !call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+    !call transpose_y_to_x(pgy2,pgy1,ph2)
+    !call transpose_y_to_x(pgzi2,pgz1,ph2)
 
+    call transpose_y_to_x_wait(handles(3), ppi2,pp1, sbufppi2,rbufpp1,ph2) !nxm ny nz
     call derxpv(px1,pp1,di1,sx,cfip6,csip6,cwip6,cfx6,csx6,cwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
+    call transpose_y_to_x_wait(handles(4),pgy2,pgy1,sbufpgy2,rbufpgy1 ,ph2)
     call interxpv(py1,pgy1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
+    call transpose_y_to_x_wait(handles(5), pgzi2,pgz1, sbufpgzi2,rbufpgz1,ph2)
     call interxpv(pz1,pgz1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
          nxmsize,xsize(1),xsize(2),xsize(3),1)
 
@@ -547,6 +598,16 @@ contains
     endif
 
     return
+    deallocate(sbufpgz3)
+    deallocate(rbufpgz2)
+    deallocate(sbufppi3)
+    deallocate(rbufpp2)
+    deallocate(sbufppi2)
+    deallocate(rbufpp1)
+    deallocate(sbufpgy2)
+    deallocate(rbufpgy1)
+    deallocate(sbufpgzi2)
+    deallocate(rbufpgz1)
   end subroutine gradp
   !############################################################################
   !############################################################################
@@ -894,9 +955,10 @@ contains
     USE var, ONLY : phi3, ta3, tb3, tc3, td3, rho3, di3
     USE param, only : zero
     IMPLICIT NONE
-    integer, dimension(2) :: handles
-    real(mytype), allocatable, dimension(:,:,:) :: sbufta1, rbufta2, sbuftb1, rbuftb2
-
+    integer, dimension(4) :: handles
+    real(mytype), allocatable, dimension(:,:,:) :: sbufta1, rbufta2, sbuftb1, rbuftb2,sbufta2,rbufta3,sbuftb2,rbuftb3
+    real(mytype), allocatable, dimension(:,:,:,:) :: sbufphi2,rbufphi3
+    integer, allocatable,dimension(:) :: handles_ims
     INTEGER :: is, tmp
 
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
@@ -905,9 +967,15 @@ contains
 
     allocate(sbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
     allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
-
     allocate(sbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
     allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(sbufphi2(size(phi2,1), size(phi2,2), size(phi2,3), 1:numscalar))
+    allocate(rbufphi3(size(phi3,1), size(phi3,2), size(phi3,3), 1:numscalar))
+    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(handles_ims(numscalar))
 
     IF (ilmn.and.(.not.ibirman_eos)) THEN
        !!------------------------------------------------------------------------------
@@ -956,6 +1024,7 @@ contains
        ! EAFIT - Call transpose wait
        CALL transpose_x_to_y_wait(handles(1), ta1, ta2, sbufta1, rbufta2)        !! Temperature
        CALL deryy (tc2, ta2, di2, sy, sfyp, ssyp, swyp, ysize(1), ysize(2), ysize(3), 1, zero)
+       CALL transpose_y_to_z_start(handles(3), ta2, ta3, sbufta2,rbufta3)        !! Temperature
        iimplicit = tmp
        IF (imultispecies) THEN
           tc2(:,:,:) = (xnu / prandtl) * tc2(:,:,:) / ta2(:,:,:)
@@ -982,19 +1051,22 @@ contains
        ! EAFIT - Call transpose wait 
        CALL transpose_x_to_y_wait(handles(2), tb1, tb2, sbuftb1, rbuftb2)        !! d2Tdx2
        tb2(:,:,:) = tb2(:,:,:) + tc2(:,:,:)
+       CALL transpose_y_to_z_start(handles(4), tb2, tb3, sbuftb2,rbuftb3)        !! d2Tdx2 + d2Tdy2
 
-       CALL transpose_y_to_z(ta2, ta3)        !! Temperature
-       CALL transpose_y_to_z(tb2, tb3)        !! d2Tdx2 + d2Tdy2
+       !CALL transpose_y_to_z(ta2, ta3)        !! Temperature
+       !CALL transpose_y_to_z(tb2, tb3)        !! d2Tdx2 + d2Tdy2
        IF (imultispecies) THEN
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                CALL transpose_y_to_z(phi2(:,:,:,is), phi3(:,:,:,is))
+                !CALL transpose_y_to_z(phi2(:,:,:,is), phi3(:,:,:,is))
+                CALL transpose_y_to_z_start(handles_ims(is),phi2(:,:,:,is), phi3(:,:,:,is),sbufphi2(:,:,:,is), rbufphi3(:,:,:,is))
              ENDIF
           ENDDO
        ENDIF
 
        !!------------------------------------------------------------------------------
        !! Z-pencil
+       CALL transpose_y_to_z_wait(handles(3), ta2, ta3, sbufta2,rbufta3)        !! Temperature
        CALL derzz (divu3, ta3, di3, sz, sfzp, sszp, swzp, zsize(1), zsize(2), zsize(3), 1, zero)
        IF (imultispecies) THEN
           divu3(:,:,:) = (xnu / prandtl) * divu3(:,:,:) / ta3(:,:,:)
@@ -1003,6 +1075,7 @@ contains
           td3(:,:,:) = zero
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
+                CALL transpose_y_to_z_wait(handles(is),phi2(:,:,:,is), phi3(:,:,:,is),sbufphi2(:,:,:,is), rbufphi3(:,:,:,is))
                 td3(:,:,:) = td3(:,:,:) + phi3(:,:,:,is) / mol_weight(is)
              ENDIF
           ENDDO
@@ -1015,6 +1088,7 @@ contains
              ENDIF
           ENDDO
        ENDIF
+       CALL transpose_y_to_z_wait(handles(4), tb2, tb3, sbuftb2,rbuftb3)        !! d2Tdx2 + d2Tdy2
        divu3(:,:,:) = divu3(:,:,:) + tb3(:,:,:)
 
        IF (imultispecies) THEN
@@ -1028,6 +1102,17 @@ contains
        divu3(:,:,:) = zero
     ENDIF
 
+    deallocate(sbufta1)
+    deallocate(rbufta2)
+    deallocate(sbuftb1)
+    deallocate(rbuftb2)
+    deallocate(sbufphi2)
+    deallocate(rbufphi3)
+    deallocate(sbuftb2)
+    deallocate(rbuftb3)
+    deallocate(sbufta2)
+    deallocate(rbufta3)
+    deallocate(handles_ims)
   ENDSUBROUTINE calc_divu_constraint
 
   !############################################################################
@@ -1109,10 +1194,17 @@ contains
     USE param, only : zero
     IMPLICIT NONE
 
+    integer, dimension(2) :: handles
+    real(mytype), allocatable, dimension(:,:,:) :: sbufta3,rbuftb2,sbufta2,rbufte1
     REAL(mytype), INTENT(IN), DIMENSION(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     REAL(mytype), DIMENSION(xsize(1), xsize(2), xsize(3)) :: drhodt1_next
 
     REAL(mytype) :: invpe
+
+    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
 
     invpe = xnu / prandtl
 
@@ -1121,19 +1213,27 @@ contains
 
     !! Diffusion term
     CALL derzz (ta3,rho3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1, zero)
-    CALL transpose_z_to_y(ta3, tb2)
+    CALL transpose_z_to_y_start(handles(1), ta3, tb2, sbufta3,rbuftb2)
+    !CALL transpose_z_to_y(ta3, tb2)
 
     iimplicit = -iimplicit
     CALL deryy (ta2,rho2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1, zero)
     iimplicit = -iimplicit
+    CALL transpose_z_to_y_wait(handles(1), ta3, tb2, sbufta3,rbuftb2)
     ta2(:,:,:) = ta2(:,:,:) + tb2(:,:,:)
-    CALL transpose_y_to_x(ta2, te1)
+    CALL transpose_y_to_x_start(handles(2), ta2, te1, sbufta2,rbufte1)
+    !CALL transpose_y_to_x(ta2, te1)
 
     CALL derxx (td1,rho1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1, zero)
+    CALL transpose_y_to_x_wait(handles(2), ta2, te1, sbufta2,rbufte1)
     td1(:,:,:) = td1(:,:,:) + te1(:,:,:)
 
     drhodt1_next(:,:,:) = drhodt1_next(:,:,:) - invpe * td1(:,:,:)
 
+    deallocate(sbufta3)
+    deallocate(rbuftb2)
+    deallocate(sbufta2)
+    deallocate(rbufte1)
   ENDSUBROUTINE birman_drhodt_corr
   !############################################################################
   !!
@@ -1279,15 +1379,21 @@ contains
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1
     real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ux2,uy2,uz2
+    real(mytype), allocatable, dimension(:,:,:) :: sbufuy1,rbufuy2
 
     integer :: j,i,k,code
+    integer, dimension(2) :: handles
     real(mytype) :: can,ut1,ut2,ut3,ut4,utt1,utt2,utt3,utt4,udif
 
+    allocate(sbufuy1(size(uy1,1), size(uy1,2), size(uy1,3)))
+    allocate(rbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
+
+    call transpose_x_to_y_start(handles(1), uy1,uy2, sbufuy1,rbufuy2)
     ux1(1,:,:)=bxx1(:,:)
     ux1(nx,:,:)=bxxn(:,:)
 
     call transpose_x_to_y(ux1,ux2)
-    call transpose_x_to_y(uy1,uy2)
+    !call transpose_x_to_y(uy1,uy2)
     ! Flow rate at the inlet
     ut1=zero;utt1=zero
     if (ystart(1)==1) then !! CPUs at the inlet
@@ -1317,6 +1423,7 @@ contains
     ! Flow rate at the top and bottom
     ut3=zero
     ut4=zero
+    call transpose_x_to_y_wait(handles(1), uy1,uy2, sbufuy1,rbufuy2)
     do k=1,ysize(3)
       do i=1,ysize(1)
         ut3=ut3+uy2(i,1,k)
@@ -1345,6 +1452,8 @@ contains
       enddo
     enddo
 
+    deallocate(sbufuy1)
+    deallocate(rbufuy2)
   end subroutine tbl_flrt
 !############################################################################
 !!

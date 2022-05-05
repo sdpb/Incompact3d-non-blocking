@@ -358,13 +358,13 @@ contains
     
     ! EAFIT - Call transpose start
     call transpose_x_to_y_start(handles(1),pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(2),pgy1,uyp2,sbufpgy1,rbufuyp2,ph4)
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
 
     call interxvp(pgy1,tb1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+     ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(2),pgy1,uyp2,sbufpgy1,rbufuyp2,ph4)
     call interxvp(pgz1,tc1,di1,sx,cifxp6,cisxp6,ciwxp6,xsize(1),nxmsize,xsize(2),xsize(3),1)
+   ! EAFIT - Call transpose start
+    call transpose_x_to_y_start(handles(3),pgz1,uzp2,sbufpgz1,rbufuzp2,ph4)
 
     ! EAFIT - Call transpose wait
     call transpose_x_to_y_wait(handles(1),pp1,duxdxp2,sbufpp1,rbufduxdxp2,ph4)!->NXM NY NZ
@@ -431,7 +431,6 @@ contains
        endif
     endif
 
-    return
     deallocate(sbufpp1)
     deallocate(rbufduxdxp2)
     deallocate(sbufpgy1)
@@ -442,6 +441,7 @@ contains
     deallocate(rbufduxydxyp3)
     deallocate(sbufupi2)
     deallocate(rbufuzp3)
+    return
   end subroutine divergence
   !############################################################################
   !subroutine GRADP
@@ -597,7 +597,6 @@ contains
        endif
     endif
 
-    return
     deallocate(sbufpgz3)
     deallocate(rbufpgz2)
     deallocate(sbufppi3)
@@ -608,6 +607,7 @@ contains
     deallocate(rbufpgy1)
     deallocate(sbufpgzi2)
     deallocate(rbufpgz1)
+    return
   end subroutine gradp
   !############################################################################
   !############################################################################
@@ -1075,7 +1075,7 @@ contains
           td3(:,:,:) = zero
           DO is = 1, numscalar
              IF (massfrac(is)) THEN
-                CALL transpose_y_to_z_wait(handles(is),phi2(:,:,:,is), phi3(:,:,:,is),sbufphi2(:,:,:,is), rbufphi3(:,:,:,is))
+                CALL transpose_y_to_z_wait(handles_ims(is),phi2(:,:,:,is), phi3(:,:,:,is),sbufphi2(:,:,:,is), rbufphi3(:,:,:,is))
                 td3(:,:,:) = td3(:,:,:) + phi3(:,:,:,is) / mol_weight(is)
              ENDIF
           ENDDO
@@ -1182,7 +1182,7 @@ contains
   SUBROUTINE birman_drhodt_corr(drhodt1_next, rho1)
 
     USE decomp_2d, ONLY : mytype, xsize, ysize, zsize
-    USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x
+    USE decomp_2d, ONLY : transpose_x_to_y, transpose_y_to_z, transpose_z_to_y, transpose_y_to_x_start, transpose_y_to_x_wait, transpose_y_to_z_start, transpose_y_to_z_wait, transpose_z_to_y_start, transpose_z_to_y_wait
     USE variables, ONLY : derxx, deryy, derzz
     USE param, ONLY : nrhotime
     USE param, ONLY : xnu, prandtl

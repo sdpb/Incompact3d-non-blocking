@@ -565,77 +565,78 @@ contains
   !! DESCRIPTION: Performs TGV-specific visualization
   !!
   !############################################################################
- subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
-474
-475     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
-476     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
-477     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
-478     use var, ONLY : nxmsize, nymsize, nzmsize
-479     use visu, only : write_field
-480     use ibm_param, only : ubcx,ubcy,ubcz
-481
-482     implicit none
-483
-484     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
-485     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
-486     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-487     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-488     character(len=32), intent(in) :: num
-489
-490     ! Write vorticity as an example of post processing
-491
-492     ! Perform communications if needed
-493     if (sync_vel_needed) then
-494       call transpose_x_to_y(ux1,ux2)
-495       call transpose_x_to_y(uy1,uy2)
-496       call transpose_x_to_y(uz1,uz2)
-497       call transpose_y_to_z(ux2,ux3)
-498       call transpose_y_to_z(uy2,uy3)
-499       call transpose_y_to_z(uz2,uz3)
-500       sync_vel_needed = .false.
-501     endif
-502
-503     !x-derivatives
-504     call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
-505     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
-506     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
-507     !y-derivatives
-508     call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-509     call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-510     call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-511     !!z-derivatives
-512     call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-513     call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-514     call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
-515     !!all back to x-pencils
-516     call transpose_z_to_y(ta3,td2)
-517     call transpose_z_to_y(tb3,te2)
-518     call transpose_z_to_y(tc3,tf2)
-519     call transpose_y_to_x(td2,tg1)
-520     call transpose_y_to_x(te2,th1)
-521     call transpose_y_to_x(tf2,ti1)
-522     call transpose_y_to_x(ta2,td1)
-523     call transpose_y_to_x(tb2,te1)
-524     call transpose_y_to_x(tc2,tf1)
-525     !du/dx=ta1 du/dy=td1 and du/dz=tg1
-526     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
-527     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
-528     !VORTICITY FIELD
-529     di1 = zero
-530     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
-531                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
-532                     + (tb1(:,:,:)-td1(:,:,:))**2)
-533     call write_field(di1, ".", "vort", trim(num), flush=.true.) ! Reusing temporary array, force flush
-534
-535     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
-536     di1 = zero
-537     di1(:,:,: ) = - 0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
-538                   - td1(:,:,:)*tb1(:,:,:) &
-539                   - tg1(:,:,:)*tc1(:,:,:) &
-540                   - th1(:,:,:)*tf1(:,:,:)
-541     call write_field(di1, ".", "critq", trim(num), flush=.true.) ! Reusing temporary array, force flush
-542
-543   end subroutine visu_tgv
+subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+
+    use var, only : ux2, uy2, uz2, ux3, uy3, uz3
+    USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
+    USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
+    use var, ONLY : nxmsize, nymsize, nzmsize
+    use visu, only : write_field
+    use ibm_param, only : ubcx,ubcy,ubcz
+
+    implicit none
+
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    character(len=32), intent(in) :: num
+
+    ! Write vorticity as an example of post processing
+
+    ! Perform communications if needed
+    if (sync_vel_needed) then
+      call transpose_x_to_y(ux1,ux2)
+      call transpose_x_to_y(uy1,uy2)
+      call transpose_x_to_y(uz1,uz2)
+      call transpose_y_to_z(ux2,ux3)
+      call transpose_y_to_z(uy2,uy3)
+      call transpose_y_to_z(uz2,uz3)
+      sync_vel_needed = .false.
+    endif
+
+    !x-derivatives
+    call derx (ta1,ux1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,ubcx)
+    call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
+    call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
+    !y-derivatives
+    call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    !!z-derivatives
+    call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
+    !!all back to x-pencils
+    call transpose_z_to_y(ta3,td2)
+    call transpose_z_to_y(tb3,te2)
+    call transpose_z_to_y(tc3,tf2)
+    call transpose_y_to_x(td2,tg1)
+    call transpose_y_to_x(te2,th1)
+    call transpose_y_to_x(tf2,ti1)
+    call transpose_y_to_x(ta2,td1)
+    call transpose_y_to_x(tb2,te1)
+    call transpose_y_to_x(tc2,tf1)
+    !du/dx=ta1 du/dy=td1 and du/dz=tg1
+    !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+    !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
+    !VORTICITY FIELD
+    di1 = zero
+    di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
+                    + (tg1(:,:,:)-tc1(:,:,:))**2 &
+                    + (tb1(:,:,:)-td1(:,:,:))**2)
+    call write_field(di1, ".", "vort", trim(num), flush=.true.) ! Reusing temporary array, force flush
+
+    !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
+    di1 = zero
+    di1(:,:,: ) = - 0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
+                  - td1(:,:,:)*tb1(:,:,:) &
+                  - tg1(:,:,:)*tc1(:,:,:) &
+                  - th1(:,:,:)*tf1(:,:,:)
+    call write_field(di1, ".", "critq", trim(num), flush=.true.) ! Reusing temporary array, force flush
+
+  end subroutine visu_tgv
+  !####################################
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 

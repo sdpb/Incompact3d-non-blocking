@@ -594,7 +594,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !! IN/OUT
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
   !real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: sbufvar1
-  real(mytype), allocatable, dimension(:,:,:) :: rbuftb2,sbufvar1,sbufta1,rbufta2
+  real(mytype), allocatable, dimension(xsize(1),xsize(2),xsize(3)) :: rbuftb2,sbufvar1,sbufta1,rbufta2
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
 
   !! LOCAL
@@ -819,10 +819,10 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
      endif
   endif
 
-   deallocate(sbufvar1)
-   deallocate(rbuftb2)
-   deallocate(sbufta1)
-   deallocate(rbufta2)
+  deallocate(sbufvar1)
+  deallocate(rbuftb2)
+  deallocate(sbufta1)
+  deallocate(rbufta2)
 
 
   return

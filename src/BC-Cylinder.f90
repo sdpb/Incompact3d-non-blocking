@@ -366,18 +366,31 @@ contains
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype), save, allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3
     character(len=32), intent(in) :: num
+    integer, dimension(6) :: handles
+
+    allocate(sbufux1(size(ux1,1), size(ux1,2), size(ux1,3)))
+    allocate(rbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
+    allocate(sbufuy1(size(uy1,1), size(uy1,2), size(uy1,3)))
+    allocate(rbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
+    allocate(sbufuz1(size(uz1,1), size(uz1,2), size(uz1,3)))
+    allocate(rbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
+
+    allocate(sbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
+    allocate(rbufux3(size(ux3,1), size(ux3,2), size(ux3,3)))
+    allocate(sbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
+    allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
+    allocate(sbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
+    allocate(rbufuz3(size(uz3,1), size(uz3,2), size(uz3,3)))
 
     ! Write vorticity as an example of post processing
 
     ! Perform communications if needed
     if (sync_vel_needed) then
-      call transpose_x_to_y(ux1,ux2)
-      call transpose_x_to_y(uy1,uy2)
-      call transpose_x_to_y(uz1,uz2)
-      call transpose_y_to_z(ux2,ux3)
-      call transpose_y_to_z(uy2,uy3)
-      call transpose_y_to_z(uz2,uz3)
+      call transpose_x_to_y_start(handles(1), ux1,ux2,sbufux1,rbufux2)
+      call transpose_x_to_y_start(handles(2), uy1,uy2,sbufuy1,rbufuy2)
+      call transpose_x_to_y_start(handles(3), uz1,uz2,sbufuz1,rbufuz2)
       sync_vel_needed = .false.
     endif
 
@@ -386,12 +399,33 @@ contains
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     !y-derivatives
+    if (sync_vel_needed) then
+      call transpose_x_to_y_wait(handles(1), ux1,ux2,sbufux1,rbufux2)
+      call transpose_y_to_z_start(handles(4), ux2,ux3,sbufux2,rbufux3)
+    endif
     call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    if (sync_vel_needed) then
+      call transpose_x_to_y_wait(handles(2), uy1,uy2,sbufuy1,rbufuy2)
+      call transpose_y_to_z_start(handles(5), uy2,uy3,sbufuy2,rbufuy3)
+    endif
     call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    if (sync_vel_needed) then
+      call transpose_x_to_y_wait(handles(3), uz1,uz2,sbufuz1,rbufuz2)
+      call transpose_y_to_z_start(handles(6), uz2,uz3,sbufuz2,rbufuz3)
+    endif
     call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
     !!z-derivatives
+    if (sync_vel_needed) then
+      call transpose_y_to_z_wait(handles(4), ux2,ux3,sbufux2,rbufux3)
+    endif
     call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    if (sync_vel_needed) then
+      call transpose_y_to_z_wait(handles(5), uy2,uy3,sbufuy2,rbufuy3)
+    endif
     call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    if (sync_vel_needed) then
+      call transpose_y_to_z_wait(handles(6), uz2,uz3,sbufuz2,rbufuz3)
+    endif
     call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     !!all back to x-pencils
     call transpose_z_to_y(ta3,td2)
@@ -420,6 +454,13 @@ contains
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)
     call write_field(di1, ".", "critq", trim(num), flush = .true.) ! Reusing temporary array, force flush
+
+  deallocate(sbufux1)
+  deallocate(rbufux2)
+  deallocate(sbufuy1)
+  deallocate(rbufuy2)
+  deallocate(sbufuz1)
+  deallocate(rbufuz2)
 
   end subroutine visu_cyl
 

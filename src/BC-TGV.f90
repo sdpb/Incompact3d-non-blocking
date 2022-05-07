@@ -303,6 +303,8 @@ contains
     allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
     allocate(sbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
     allocate(rbufuz3(size(uz3,1), size(uz3,2), size(uz3,3)))
+    allocate(sbufte2(size(te2,1), size(te2,2), size(te2,3)))
+    allocate(rbufth1(size(th1,1), size(th1,2), size(th1,3)))
 
     if (nclx1==1.and.xend(1)==nx) then
        xsize1=xsize(1)-1
@@ -532,6 +534,8 @@ contains
     deallocate(rbuftf2)
     deallocate(sbufuz2)
     deallocate(rbufuz3)
+    deallocate(sbufte2)
+    deallocate(rbufth1)
 
   end subroutine postprocess_tgv
 
@@ -605,6 +609,7 @@ contains
     allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
     allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
     allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
+    allocate(rbuftd2(size(td2,1), size(td2,2), size(td2,3)))
 
     ! Write vorticity as an example of post processing
 
@@ -688,6 +693,7 @@ contains
     deallocate(rbufte1)
     deallocate(sbuftc2)
     deallocate(rbuftf1)
+    deallocate(rbuftd2)
 
   end subroutine visu_tgv
   !############################################################################

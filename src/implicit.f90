@@ -589,13 +589,23 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !! IN
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)), optional, intent(in) :: forcing1
   integer, intent(in) :: npaire, isc
+  integer, dimension(5) :: handles
 
   !! IN/OUT
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
+  !real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: sbufvar1
+  real(mytype), allocatable, dimension(:,:,:) :: rbuftb2,sbufvar1,sbufta1,rbufta2
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
 
   !! LOCAL
   real(mytype),dimension(ysize(1),ysize(3)) :: bctop, bcbot
+
+  allocate(sbufvar1(size(var1,1), size(var1,2), size(var1,3)))
+  allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+  allocate(sbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
+  allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+
+  call transpose_x_to_y_start(handles(1),var1,tb2,sbufvar1,rbuftb2)
 
   if (itimescheme.eq.1) then
      !>>> Explicit Euler
@@ -660,10 +670,12 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
      endif
   endif
 
-  !Y-PENCIL FOR MATRIX INVERSION
-  call transpose_x_to_y(var1,tb2)
+  call transpose_x_to_y_start(handles(2),ta1,ta2,sbufta1,rbufta2)
 
-  call transpose_x_to_y(ta1,ta2)
+  !Y-PENCIL FOR MATRIX INVERSION
+  !call transpose_x_to_y(var1,tb2)
+
+  !call transpose_x_to_y(ta1,ta2)
 
   !
   ! Prepare boundary conditions
@@ -678,6 +690,7 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   ! Specific cases first
   ! This is the location for exotic / nonhomogeneous boundary conditions
   !
+  call transpose_x_to_y_wait(handles(1),var1,tb2,sbufvar1,rbuftb2)
   if (itype.eq.itype_tbl .and. isc.eq.0) then
      bcbot(:,:) = zero
      bctop(:,:) = tb2(:,ny-1,:)
@@ -697,6 +710,8 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !td2:(A+xcstB).un
   !if isecondder=5, we need nona inversion
   !id isecondder is not 5, we need septa inversion
+
+  call transpose_x_to_y_wait(handles(2),ta1,ta2,sbufta1,rbufta2)
 
   if (isecondder.ne.5) then
      if (isc.eq.0) then
@@ -803,6 +818,11 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
         var1(:,:,:)=var1(:,:,:)+forcing1(:,:,:)
      endif
   endif
+
+   deallocate(sbufvar1)
+   deallocate(rbuftb2)
+   deallocate(sbufta1)
+   deallocate(rbufta2)
 
 
   return

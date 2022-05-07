@@ -274,7 +274,7 @@ contains
     real(mytype),intent(in),dimension(xstart(1):xend(1),xstart(2):xend(2),xstart(3):xend(3),numscalar) :: phi1
     ! EAFIT - Define sbuf and rbuf
     real(mytype), allocatable, dimension(:,:,:) :: sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3
-    real(mytype), allocatable, dimension(:,:,:,:) :: sbufphi2,rbufphi3
+    real(mytype), allocatable, dimension(:,:,:) :: sbufphi2,rbufphi3
     integer, dimension(10) :: handles
 
     integer :: iounit, i, FS, FSP, is
@@ -290,8 +290,8 @@ contains
     allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
     allocate(sbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
     allocate(rbufuz3(size(uz3,1), size(uz3,2), size(uz3,3)))
-    allocate(sbufphi2(size(phi2,1), size(phi2,2), size(phi2,3), size(phi2,4)))
-    allocate(rbufphi3(size(phi3,1), size(phi3,2), size(phi3,3), size(phi3,4)))
+    allocate(sbufphi2(size(phi2,1), size(phi2,2), size(phi2,3)))
+    allocate(rbufphi3(size(phi3,1), size(phi3,2), size(phi3,3)))
     
     if (nprobes.le.0) return
 

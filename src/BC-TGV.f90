@@ -303,6 +303,8 @@ contains
     allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
     allocate(sbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
     allocate(rbufuz3(size(uz3,1), size(uz3,2), size(uz3,3)))
+    allocate(sbufte2(size(te2,1), size(te2,2), size(te2,3)))
+    allocate(rbufth1(size(th1,1), size(th1,2), size(th1,3)))
 
     if (nclx1==1.and.xend(1)==nx) then
        xsize1=xsize(1)-1
@@ -532,6 +534,8 @@ contains
     deallocate(rbuftf2)
     deallocate(sbufuz2)
     deallocate(rbufuz3)
+    deallocate(sbufte2)
+    deallocate(rbufth1)
 
   end subroutine postprocess_tgv
 
@@ -565,7 +569,7 @@ contains
   !! DESCRIPTION: Performs TGV-specific visualization
   !!
   !############################################################################
-subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
+  subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
@@ -580,7 +584,32 @@ subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+    real(mytype), allocatable, dimension(:,:,:) :: sbufta3,rbuftd2,sbuftb3,rbufte2,sbuftc3,rbuftf2,sbuftd2,rbuftg1,sbufte2
+    real(mytype), allocatable, dimension(:,:,:) :: rbufth1,sbuftb2,rbufte1,sbuftf2,rbufti1,sbufta2,rbuftd1,rbuftf1,sbuftc2
+
     character(len=32), intent(in) :: num
+
+    integer, dimension(30) :: handles
+
+        ! EAFIT - Allocate rbuf and sbuf
+    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
+    allocate(rbufte2(size(te2,1), size(te2,2), size(te2,3)))
+    allocate(sbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
+    allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
+    allocate(sbuftd2(size(td2,1), size(td2,2), size(td2,3)))
+    allocate(rbuftg1(size(tg1,1), size(tg1,2), size(tg1,3)))
+    allocate(sbufte2(size(te2,1), size(te2,2), size(te2,3)))
+    allocate(rbufth1(size(th1,1), size(th1,2), size(th1,3)))
+    allocate(sbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
+    allocate(rbufti1(size(ti1,1), size(ti1,2), size(ti1,3)))
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbuftd1(size(td1,1), size(td1,2), size(td1,3)))
+    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
+    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
+    allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
+    allocate(rbuftd2(size(td2,1), size(td2,2), size(td2,3)))
 
     ! Write vorticity as an example of post processing
 
@@ -601,27 +630,37 @@ subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     !y-derivatives
     call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call transpose_y_to_x_start(handles(7),ta2,td1,sbufta2,rbuftd1)
     call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call transpose_y_to_x_start(handles(8),tb2,te1,sbuftb2,rbufte1)
     call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
+    call transpose_y_to_x_start(handles(9),tc2,tf1,sbuftc2,rbuftf1)
     !!z-derivatives
     call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call transpose_z_to_y_start(handles(1),ta3,td2,sbufta3,rbuftd2)
     call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call transpose_z_to_y_start(handles(2),tb3,te2,sbuftb3,rbufte2)
     call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     !!all back to x-pencils
-    call transpose_z_to_y(ta3,td2)
-    call transpose_z_to_y(tb3,te2)
-    call transpose_z_to_y(tc3,tf2)
-    call transpose_y_to_x(td2,tg1)
-    call transpose_y_to_x(te2,th1)
-    call transpose_y_to_x(tf2,ti1)
-    call transpose_y_to_x(ta2,td1)
-    call transpose_y_to_x(tb2,te1)
-    call transpose_y_to_x(tc2,tf1)
+    
+    
+    call transpose_z_to_y_start(handles(3),tc3,tf2,sbuftc3,rbuftf2)
+    call transpose_z_to_y_wait(handles(1),ta3,td2,sbufta3,rbuftd2)
+    call transpose_y_to_x_start(handles(4),td2,tg1,sbuftd2,rbuftg1)
+    call transpose_z_to_y_wait(handles(2),tb3,te2,sbuftb3,rbufte2)
+    call transpose_y_to_x_start(handles(5),te2,th1,sbufte2,rbufth1)
+    call transpose_z_to_y_wait(handles(3),tc3,tf2,sbuftc3,rbuftf2)
+    call transpose_y_to_x_start(handles(6),tf2,ti1,sbuftf2,rbufti1)
+    
     !du/dx=ta1 du/dy=td1 and du/dz=tg1
     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
     !VORTICITY FIELD
     di1 = zero
+    call transpose_y_to_x_wait(handles(5),te2,th1,sbufte2,rbufth1)
+    call transpose_y_to_x_wait(handles(4),td2,tg1,sbuftd2,rbuftg1)
+    call transpose_y_to_x_wait(handles(7),ta2,td1,sbufta2,rbuftd1)
+    call transpose_y_to_x_wait(handles(9),tc2,tf1,sbuftc2,rbuftf1)
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
@@ -629,14 +668,34 @@ subroutine visu_tgv(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
+    call transpose_y_to_x_wait(handles(8),tb2,te1,sbuftb2,rbufte1)
+    call transpose_y_to_x_wait(handles(6),tf2,ti1,sbuftf2,rbufti1)
     di1(:,:,: ) = - 0.5*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
                   - th1(:,:,:)*tf1(:,:,:)
     call write_field(di1, ".", "critq", trim(num), flush=.true.) ! Reusing temporary array, force flush
 
+    deallocate(sbufta3)
+    deallocate(sbuftb3)
+    deallocate(rbufte2)
+    deallocate(sbuftc3)
+    deallocate(rbuftf2)
+    deallocate(sbuftd2)
+    deallocate(rbuftg1)
+    deallocate(sbufte2)
+    deallocate(rbufth1)
+    deallocate(sbuftf2)
+    deallocate(rbufti1)
+    deallocate(sbufta2)
+    deallocate(rbuftd1)
+    deallocate(sbuftb2)
+    deallocate(rbufte1)
+    deallocate(sbuftc2)
+    deallocate(rbuftf1)
+    deallocate(rbuftd2)
+
   end subroutine visu_tgv
-  !####################################
   !############################################################################
   subroutine suspended(phi1,vol1,mp1)
 

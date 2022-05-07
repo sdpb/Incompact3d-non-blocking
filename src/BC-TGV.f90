@@ -249,13 +249,14 @@ contains
 
   end subroutine init_post
   !############################################################################
+    !############################################################################
   subroutine postprocess_tgv(ux1,uy1,uz1,phi1,ep1)
 
     USE decomp_2d
     USE decomp_2d_io
     USE variables, only: nx,ny,nz
     USE MPI
-    USE var, only: nut1, srt_smag 
+    USE var, only: nut1, srt_smag
     USE var, only : uvisu, ux2, uy2, uz2, ux3, uy3, uz3
     USE var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
     USE var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
@@ -266,43 +267,11 @@ contains
     real(mytype) :: mp(numscalar),mps(numscalar),vl,es,es1,ek,ek1,ds,ds1
     real(mytype) :: temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9
 
-    integer, dimension(25) :: handles
-
-    ! EAFIT - Define rbuf and sbuf
-    real(mytype), allocatable, dimension(:,:,:) :: sbuftf2,rbufti1,sbuftb2,rbufte1,sbufta3,rbuftd2,sbufta2,rbuftd1,sbuftc2,rbuftf1,sbuftd2,rbuftg1,sbufuz2
-    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufux2,rbufux3,sbufuy2,rbufuy3,rbufte2,rbuftf2,sbuftc3,rbufth1,rbufuz3,sbuftb3,sbufte2
-
     real(mytype) :: eek, enst, eps, eps2
     integer :: nxc, nyc, nzc, xsize1, xsize2, xsize3
 
     integer :: i,j,k,is,code,nvect1
     character(len=30) :: filename
-
-    ! EAFIT - Allocate rbuf and sbuf
-    allocate(sbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
-    allocate(rbufti1(size(ti1,1), size(ti1,2), size(ti1,3)))
-    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
-    allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
-    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
-    allocate(rbuftd2(size(td2,1), size(td2,2), size(td2,3)))
-    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
-    allocate(rbuftd1(size(td1,1), size(td1,2), size(td1,3)))
-    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
-    allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
-    allocate(sbuftd2(size(td2,1), size(td2,2), size(td2,3)))
-    allocate(rbuftg1(size(tg1,1), size(tg1,2), size(tg1,3)))
-    allocate(sbufux1(size(ux1,1), size(ux1,2), size(ux1,3)))
-    allocate(rbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
-    allocate(sbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
-    allocate(rbufux3(size(ux3,1), size(ux3,2), size(ux3,3)))
-    allocate(sbufuy2(size(uy2,1), size(uy2,2), size(uy2,3)))
-    allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
-    allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
-    allocate(rbufte2(size(te2,1), size(te2,2), size(te2,3)))
-    allocate(sbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
-    allocate(rbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
-    allocate(sbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
-    allocate(rbufuz3(size(uz3,1), size(uz3,2), size(uz3,3)))
 
     if (nclx1==1.and.xend(1)==nx) then
        xsize1=xsize(1)-1
@@ -341,13 +310,12 @@ contains
 
        ! Perform communications if needed
        if (sync_vel_needed) then
-         call transpose_x_to_y_start(handles(15),ux1,ux2,sbufux1,rbufux2)
+         call transpose_x_to_y(ux1,ux2)
          call transpose_x_to_y(uy1,uy2)
          call transpose_x_to_y(uz1,uz2)
-         call transpose_x_to_y_wait(handles(15),ux1,ux2,sbufux1,rbufux2)
-         call transpose_y_to_z_start(handles(16),ux2,ux3,sbufux2,rbufux3)
-         call transpose_y_to_z_start(handles(17),uy2,uy3,sbufuy2,rbufuy3)
-         call transpose_y_to_z_start(handles(18),uz2,uz3,sbufuz2,rbufuz3)
+         call transpose_y_to_z(ux2,ux3)
+         call transpose_y_to_z(uy2,uy3)
+         call transpose_y_to_z(uz2,uz3)
          sync_vel_needed = .false.
        endif
 
@@ -358,47 +326,26 @@ contains
        call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
        !y-derivatives
        call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
-       call transpose_y_to_x_start(handles(5),ta2,td1,sbufta2,rbuftd1)
        call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
-
-       ! EAFIT - Call transpose start
-       call transpose_y_to_x_start(handles(2),tb2,te1,sbuftb2,rbufte1)
-
        call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-       call transpose_y_to_x_start(handles(6),tc2,tf1,sbuftc2,rbuftf1)
        !!z-derivatives
-       if (sync_vel_needed) then
-         call transpose_y_to_z_wait(handles(16),ux2,ux3,sbufux2,rbufux3)
-       endif
        call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-
-       !!all back to x-pencils
-       call transpose_z_to_y_start(handles(3),ta3,td2,sbufta3,rbuftd2)
-       if (sync_vel_needed) then
-         call transpose_y_to_z_wait(handles(17),uy2,uy3,sbufuy2,rbufuy3)
-       endif
        call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-       call transpose_z_to_y_start(handles(4),tb3,te2,sbuftb3,rbufte2)
-       if (sync_vel_needed) then
-         call transpose_y_to_z_wait(handles(18),uz2,uz3,sbufuz2,rbufuz3)
-       endif
        call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
-
+       !!all back to x-pencils
+       call transpose_z_to_y(ta3,td2)
+       call transpose_z_to_y(tb3,te2)
        call transpose_z_to_y(tc3,tf2)
-
-       ! EAFIT - Call transpose start
-       call transpose_y_to_x_start(handles(1),tf2,ti1,sbuftf2,rbufti1)
-
-       call transpose_z_to_y_wait(handles(3),ta3,td2,sbufta3,rbuftd2)
        call transpose_y_to_x(td2,tg1)
-
-       call transpose_z_to_y_wait(handles(4),tb3,te2,sbuftb3,rbufte2)
        call transpose_y_to_x(te2,th1)
+       call transpose_y_to_x(tf2,ti1)
+       call transpose_y_to_x(ta2,td1)
+       call transpose_y_to_x(tb2,te1)
+       call transpose_y_to_x(tc2,tf1)
+       !du/dx=ta1 du/dy=td1 and du/dz=tg1
+       !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
+       !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
 
-
-
-       call transpose_y_to_x_wait(handles(5),ta2,td1,sbufta2,rbuftd1)
-       call transpose_y_to_x_wait(handles(6),tc2,tf1,sbuftc2,rbuftf1)
        !SPATIALLY-AVERAGED ENSTROPHY
        temp1=zero
        do k=1,xsize3
@@ -413,12 +360,6 @@ contains
        call MPI_ALLREDUCE(temp1,enst,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        enst=enst/(nxc*nyc*nzc)
 
-       ! EAFIT - Call transpose wait
-       call transpose_y_to_x_wait(handles(2),tb2,te1,sbuftb2,rbufte1)
-
-       ! EAFIT - Call transpose wait
-       call transpose_y_to_x_wait(handles(1),tf2,ti1,sbuftf2,rbufti1)
-       
        !SPATIALLY-AVERAGED ENERGY DISSIPATION
        temp1=zero
        do k=1,xsize3
@@ -456,35 +397,25 @@ contains
        call derxx (tc1,uz1,di1,sx,sfxp,ssxp,swxp,xsize(1),xsize(2),xsize(3),1,ubcz)
        !y-derivatives
        call deryy (ta2,ux2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcx)
-       call transpose_y_to_x_start(handles(10),ta2,td1,sbufta2,rbuftd1) 
        call deryy (tb2,uy2,di2,sy,sfy ,ssy ,swy ,ysize(1),ysize(2),ysize(3),0,ubcy)
-       call transpose_y_to_x_start(handles(11),tb2,te1,sbuftb2,rbufte1) 
        call deryy (tc2,uz2,di2,sy,sfyp,ssyp,swyp,ysize(1),ysize(2),ysize(3),1,ubcz)
-       call transpose_y_to_x_start(handles(12),tc2,tf1,sbuftc2,rbuftf1) 
        !!z-derivatives
        call derzz (ta3,ux3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcx)
-       call transpose_z_to_y_start(handles(7),ta3,td2,sbufta3,rbuftd2)
        call derzz (tb3,uy3,di3,sz,sfzp,sszp,swzp,zsize(1),zsize(2),zsize(3),1,ubcy)
-       call transpose_z_to_y_start(handles(8),tb3,te2,sbuftb3,rbufte2)
        call derzz (tc3,uz3,di3,sz,sfz ,ssz ,swz ,zsize(1),zsize(2),zsize(3),0,ubcz)
-       !!all back to x-pencils 
-       call transpose_z_to_y_start(handles(9),tc3,tf2,sbuftc3,rbuftf2)
-       call transpose_z_to_y_wait(handles(7),ta3,td2,sbufta3,rbuftd2)
-       call transpose_y_to_x_start(handles(13),td2,tg1,sbuftd2,rbuftg1)
-       call transpose_z_to_y_wait(handles(8),tb3,te2,sbuftb3,rbufte2)
-       call transpose_y_to_x_start(handles(14),te2,th1,sbufte2,rbufth1)
-       call transpose_z_to_y_wait(handles(9),tc3,tf2,sbuftc3,rbuftf2)
+       !!all back to x-pencils
+       call transpose_z_to_y(ta3,td2)
+       call transpose_z_to_y(tb3,te2)
+       call transpose_z_to_y(tc3,tf2)
+       call transpose_y_to_x(td2,tg1)
+       call transpose_y_to_x(te2,th1)
        call transpose_y_to_x(tf2,ti1)
-       
+       call transpose_y_to_x(ta2,td1)
+       call transpose_y_to_x(tb2,te1)
+       call transpose_y_to_x(tc2,tf1)
        !d2u/dx2=ta1 d2u/dy2=td1 and d2u/dz2=tg1
        !d2v/dx2=tb1 d2v/dy2=te1 and d2v/dz2=th1
        !d2w/dx2=tc1 d2w/dy2=tf1 and d2w/dz2=ti1
-
-       call transpose_y_to_x_wait(handles(10),ta2,td1,sbufta2,rbuftd1)
-       call transpose_y_to_x_wait(handles(11),tb2,te1,sbuftb2,rbufte1)
-       call transpose_y_to_x_wait(handles(12),tc2,tf1,sbuftc2,rbuftf1)
-       call transpose_y_to_x_wait(handles(14),te2,th1,sbufte2,rbufth1)
-       call transpose_y_to_x_wait(handles(13),td2,tg1,sbuftd2,rbuftg1) 
        !SPATIALLY-AVERAGED ENERGY DISSIPATION WITH SECOND DERIVATIVES
        temp1=zero
        di1  =zero
@@ -500,38 +431,13 @@ contains
        enddo
        call MPI_ALLREDUCE(temp1,eps2,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
        eps2=eps2/(nxc*nyc*nzc)
-       
-       
+
+
        if (nrank==0) then
           write(42,'(20e20.12)') (itime-1)*dt,eek,eps,eps2,enst
           call flush(42)
        endif
     endif
-
-    deallocate(sbuftf2)
-    deallocate(rbufti1)
-    deallocate(sbuftb2)
-    deallocate(rbufte1)
-    deallocate(sbufta3)
-    deallocate(rbuftd2)
-    deallocate(sbufta2)
-    deallocate(rbuftd1)
-    deallocate(sbuftc2)
-    deallocate(rbuftf1)
-    deallocate(sbuftd2)
-    deallocate(rbuftg1)
-    deallocate(sbufux1)
-    deallocate(rbufux2)
-    deallocate(sbufux2)
-    deallocate(rbufux3)
-    deallocate(sbufuy2)
-    deallocate(rbufuy3)
-    deallocate(sbuftb3)
-    deallocate(rbufte2)
-    deallocate(sbuftc3)
-    deallocate(rbuftf2)
-    deallocate(sbufuz2)
-    deallocate(rbufuz3)
 
   end subroutine postprocess_tgv
 

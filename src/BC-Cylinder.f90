@@ -366,9 +366,9 @@ contains
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3
+    real(mytype), allocatable, dimension(:,:,:) :: sbufux1,rbufux2,sbufuy1,rbufuy2,sbufuz1,rbufuz2,sbufux2,rbufux3,sbufuy2,rbufuy3,sbufuz2,rbufuz3,sbufta3,rbuftd2,sbuftb3,rbufte2,sbufta2,rbuftd1,sbuftb2,rbufte1,sbuftc2,rbuftf1,sbuftf2,rbufti1
     character(len=32), intent(in) :: num
-    integer, dimension(6) :: handles
+    integer, dimension(12) :: handles
 
     allocate(sbufux1(size(ux1,1), size(ux1,2), size(ux1,3)))
     allocate(rbufux2(size(ux2,1), size(ux2,2), size(ux2,3)))
@@ -383,6 +383,20 @@ contains
     allocate(rbufuy3(size(uy3,1), size(uy3,2), size(uy3,3)))
     allocate(sbufuz2(size(uz2,1), size(uz2,2), size(uz2,3)))
     allocate(rbufuz3(size(uz3,1), size(uz3,2), size(uz3,3)))
+
+    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(rbuftd2(size(td2,1), size(td2,2), size(td2,3)))
+    allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
+    allocate(rbufte2(size(te2,1), size(te2,2), size(te2,3)))
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbuftd1(size(td1,1), size(td1,2), size(td1,3)))
+    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
+    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
+    allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
+    allocate(sbuftf2(size(tf2,1), size(tf2,2), size(tf2,3)))
+    allocate(rbufti1(size(ti1,1), size(ti1,2), size(ti1,3)))
+
 
     ! Write vorticity as an example of post processing
 
@@ -404,44 +418,53 @@ contains
       call transpose_y_to_z_start(handles(4), ux2,ux3,sbufux2,rbufux3)
     endif
     call dery (ta2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
+    call transpose_y_to_x_start(handles(9), ta2,td1, sbufta2,rbuftd1)
     if (sync_vel_needed) then
       call transpose_x_to_y_wait(handles(2), uy1,uy2,sbufuy1,rbufuy2)
       call transpose_y_to_z_start(handles(5), uy2,uy3,sbufuy2,rbufuy3)
     endif
     call dery (tb2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
+    call transpose_y_to_x_start(handles(10), tb2,te1, sbuftb2,rbufte1)
     if (sync_vel_needed) then
       call transpose_x_to_y_wait(handles(3), uz1,uz2,sbufuz1,rbufuz2)
       call transpose_y_to_z_start(handles(6), uz2,uz3,sbufuz2,rbufuz3)
     endif
     call dery (tc2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
-    !!z-derivatives
+    call transpose_y_to_x_start(handles(11), tc2,tf1,sbuftc2,rbuftf1 )
     if (sync_vel_needed) then
       call transpose_y_to_z_wait(handles(4), ux2,ux3,sbufux2,rbufux3)
     endif
+    !!z-derivatives
     call derz (ta3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
+    call transpose_z_to_y_start(handles(7), ta3,td2, sbufta3,rbuftd2)
     if (sync_vel_needed) then
       call transpose_y_to_z_wait(handles(5), uy2,uy3,sbufuy2,rbufuy3)
     endif
     call derz (tb3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
+    call transpose_z_to_y_start(handles(8), tb3,te2, sbuftb3,rbufte2)
     if (sync_vel_needed) then
       call transpose_y_to_z_wait(handles(6), uz2,uz3,sbufuz2,rbufuz3)
     endif
     call derz (tc3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     !!all back to x-pencils
-    call transpose_z_to_y(ta3,td2)
-    call transpose_z_to_y(tb3,te2)
-    call transpose_z_to_y(tc3,tf2)
-    call transpose_y_to_x(td2,tg1)
+    !!call transpose_z_to_y(ta3,td2)
+    !!call transpose_z_to_y(tb3,te2)
+      call transpose_z_to_y_wait(handles(7), ta3,td2, sbufta3,rbuftd2)
+      call transpose_y_to_x(td2,tg1)
+    call transpose_z_to_y_wait(handles(8), tb3,te2, sbuftb3,rbufte2)
     call transpose_y_to_x(te2,th1)
-    call transpose_y_to_x(tf2,ti1)
-    call transpose_y_to_x(ta2,td1)
-    call transpose_y_to_x(tb2,te1)
-    call transpose_y_to_x(tc2,tf1)
+    call transpose_z_to_y(tc3,tf2) ! not ported since serves too little to send to background when there are others communication routines on background
+    call transpose_y_to_x_start(handles(12), tf2,ti1,sbuftf2,rbufti1)
+    !call transpose_y_to_x(ta2,td1)
+    !call transpose_y_to_x(tb2,te1)
+    !call transpose_y_to_x(tc2,tf1)
     !du/dx=ta1 du/dy=td1 and du/dz=tg1
     !dv/dx=tb1 dv/dy=te1 and dv/dz=th1
     !dw/dx=tc1 dw/dy=tf1 and dw/dz=ti1
     !VORTICITY FIELD
     di1 = zero
+    call transpose_y_to_x_wait(handles(9), ta2,td1, sbufta2,rbuftd1)
+    call transpose_y_to_x_wait(handles(11), tc2,tf1,sbuftc2,rbuftf1 )
     di1(:,:,:)=sqrt(  (tf1(:,:,:)-th1(:,:,:))**2 &
                     + (tg1(:,:,:)-tc1(:,:,:))**2 &
                     + (tb1(:,:,:)-td1(:,:,:))**2)
@@ -449,6 +472,8 @@ contains
 
     !Q=-0.5*(ta1**2+te1**2+ti1**2)-td1*tb1-tg1*tc1-th1*tf1
     di1 = zero
+    call transpose_y_to_x_wait(handles(10), tb2,te1, sbuftb2,rbufte1)
+    call transpose_y_to_x_wait(handles(12), tf2,ti1,sbuftf2,rbufti1)
     di1(:,:,: ) = - half*(ta1(:,:,:)**2+te1(:,:,:)**2+ti1(:,:,:)**2) &
                   - td1(:,:,:)*tb1(:,:,:) &
                   - tg1(:,:,:)*tc1(:,:,:) &
@@ -461,6 +486,25 @@ contains
   deallocate(rbufuy2)
   deallocate(sbufuz1)
   deallocate(rbufuz2)
+  deallocate(sbufux2)
+  deallocate(rbufux3)
+  deallocate(sbufuy2)
+  deallocate(rbufuy3)
+  deallocate(sbufuz2)
+  deallocate(rbufuz3)
+  deallocate(sbufta3)
+  deallocate(rbuftd2)
+  deallocate(sbuftb3)
+  deallocate(rbufte2)
+  deallocate(sbufta2)
+  deallocate(rbuftd1)
+  deallocate(sbuftb2)
+  deallocate(rbufte1)
+  deallocate(sbuftc2)
+  deallocate(rbuftf1)
+  deallocate(sbuftf2)
+  deallocate(rbufti1)
+
 
   end subroutine visu_cyl
 

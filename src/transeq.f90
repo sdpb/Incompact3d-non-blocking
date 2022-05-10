@@ -857,10 +857,11 @@ deallocate(rbuftc1)
     implicit none
 
     ! EAFIT - define rbuf and sbuf
-    real(mytype), allocatable, dimension(:,:,:) :: sbuftc3,rbuftc2,sbuftb2,rbufte1,sbuftc2,rbuftf1, sbuftd1,rbuftg2,sbufta1,rbufta2,sbuftb1,rbuftb2,sbuftc1,rbuftc2,sbufta2,rbufta3,sbuftb2,rbuftb3,sbuftc2,rbuftc3,sbuftg2,rbuftg3,sbufth2,rbufth3,sbufti2,rbufti3, sbufmu1,rbufti2, sbufta3,rbufta2,sbuftb3,rbuftb2,sbuftc3,rbuftc2,sbufth3,rbufti2,sbufta2,rbufta1,sbuftb2,rbuftb1, sbuftc2,rbuftc1, sbufth2,rbufte1,sbufti2,rbuftf1
+    real(mytype), allocatable, dimension(:,:,:) :: rbufta1,rbufta2,rbufta3,rbuftb1,rbuftb2,rbuftb3,rbuftc1,rbuftc2,rbuftc3,rbufte1,rbuftf1,rbuftg2,rbuftg3,rbufth3,rbufti2,rbufti3,sbufmu1,sbufta1,sbufta2,sbufta3,sbuftb1,sbuftb2,sbuftb3,sbuftc1,sbuftc2,sbuftc3,sbuftd1,sbuftg2,sbufth2,sbufth3,sbufti2
+
 
     ! real(mytype), allocatable, dimension(:,:,:,:) ::     ! EAFIT - define handle mpi routine
-    integer, dimension(22) :: handles
+    integer, dimension(23) :: handles
 
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dux1, duy1, duz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: mu1
@@ -872,74 +873,38 @@ deallocate(rbuftc1)
 
 
     ! EAFIT - define allocates
-    allocate(sbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
-    allocate(rbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
-
-    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
-    allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
-
-    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
-    allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
-
-    allocate(sbuftd1(size(td1,1), size(td1,2), size(td1,3)))
-    allocate(rbuftg2(size(tg2,1), size(tg2,2), size(tg2,3)))
-
-    allocate(sbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
-    allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
-
-    allocate(sbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
-    allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
-
-    allocate(sbuftc1(size(tc1,1), size(tc1,2), size(tc1,3)))
-    allocate(rbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
-
-    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
-    allocate(rbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
-
-    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
-    allocate(rbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
-
-    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
-    allocate(rbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
-
-    allocate(sbuftg2(size(tg2,1), size(tg2,2), size(tg2,3)))
-    allocate(rbuftg3(size(tg3,1), size(tg3,2), size(tg3,3)))
-
-    allocate(sbufth2(size(th2,1), size(th2,2), size(th2,3)))
-    allocate(rbufth3(size(th3,1), size(th3,2), size(th3,3)))
-
-    allocate(sbufti2(size(ti2,1), size(ti2,2), size(ti2,3)))
-    allocate(rbufti3(size(ti3,1), size(ti3,2), size(ti3,3)))
-
-    allocate(sbufmu1(size(mu1,1), size(mu1,2), size(mu1,3)))
-    allocate(rbufti2(size(ti2,1), size(ti2,2), size(ti2,3)))
-
-    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
-    allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
-
-    allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
-    allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
-
-    allocate(sbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
-    allocate(rbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
-
-    allocate(sbufth3(size(th3,1), size(th3,2), size(th3,3)))
-    allocate(rbufti2(size(ti2,1), size(ti2,2), size(ti2,3)))
-
-    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
     allocate(rbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
-
-    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(rbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
     allocate(rbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
-
-    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
+    allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(rbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
     allocate(rbuftc1(size(tc1,1), size(tc1,2), size(tc1,3)))
-
-    allocate(sbufth2(size(th2,1), size(th2,2), size(th2,3)))
+    allocate(rbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
+    allocate(rbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
     allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
-
-    allocate(sbufti2(size(ti2,1), size(ti2,2), size(ti2,3)))
     allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
+    allocate(rbuftg2(size(tg2,1), size(tg2,2), size(tg2,3)))
+    allocate(rbuftg3(size(tg3,1), size(tg3,2), size(tg3,3)))
+    allocate(rbufth3(size(th3,1), size(th3,2), size(th3,3)))
+    allocate(rbufti2(size(ti2,1), size(ti2,2), size(ti2,3)))
+    allocate(rbufti3(size(ti3,1), size(ti3,2), size(ti3,3)))
+    allocate(sbufmu1(size(mu1,1), size(mu1,2), size(mu1,3)))
+    allocate(sbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
+    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
+    allocate(sbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
+    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+    allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
+    allocate(sbuftc1(size(tc1,1), size(tc1,2), size(tc1,3)))
+    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
+    allocate(sbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
+    allocate(sbuftd1(size(td1,1), size(td1,2), size(td1,3)))
+    allocate(sbuftg2(size(tg2,1), size(tg2,2), size(tg2,3)))
+    allocate(sbufth2(size(th2,1), size(th2,2), size(th2,3)))
+    allocate(sbufth3(size(th3,1), size(th3,2), size(th3,3)))
+    allocate(sbufti2(size(ti2,1), size(ti2,2), size(ti2,3)))
+    
 
 
 
@@ -1134,74 +1099,37 @@ deallocate(rbuftc1)
 
 
     ! EAFIT - define deallocates
-    deallocate(sbuftc3)
-    deallocate(rbuftc2)
-
-    deallocate(sbuftb2)
-    deallocate(rbufte1)
-
-    deallocate(sbuftc2)
-    deallocate(rbuftf1)
-
-    deallocate(sbuftd1)
-    deallocate(rbuftg2)
-
-    deallocate(sbufta1)
-    deallocate(rbufta2)
-
-    deallocate(sbuftb1)
-    deallocate(rbuftb2)
-
-    deallocate(sbuftc1)
-    deallocate(rbuftc2)
-
-    deallocate(sbufta2)
-    deallocate(rbufta3)
-
-    deallocate(sbuftb2)
-    deallocate(rbuftb3)
-
-    deallocate(sbuftc2)
-    deallocate(rbuftc3)
-
-    deallocate(sbuftg2)
-    deallocate(rbuftg3)
-
-    deallocate(sbufth2)
-    deallocate(rbufth3)
-
-    deallocate(sbufti2)
-    deallocate(rbufti3)
-
-    deallocate(sbufmu1)
-    deallocate(rbufti2)
-
-    deallocate(sbufta3)
-    deallocate(rbufta2)
-
-    deallocate(sbuftb3)
-    deallocate(rbuftb2)
-
-    deallocate(sbuftc3)
-    deallocate(rbuftc2)
-
-    deallocate(sbufth3)
-    deallocate(rbufti2)
-
-    deallocate(sbufta2)
     deallocate(rbufta1)
-
-    deallocate(sbuftb2)
+    deallocate(rbufta2)
+    deallocate(rbufta3)
     deallocate(rbuftb1)
-
-    deallocate(sbuftc2)
+    deallocate(rbuftb2)
+    deallocate(rbuftb3)
     deallocate(rbuftc1)
-
-    deallocate(sbufth2)
+    deallocate(rbuftc2)
+    deallocate(rbuftc3)
     deallocate(rbufte1)
-
-    deallocate(sbufti2)
     deallocate(rbuftf1)
+    deallocate(rbuftg2)
+    deallocate(rbuftg3)
+    deallocate(rbufth3)
+    deallocate(rbufti2)
+    deallocate(rbufti3)
+    deallocate(sbufmu1)
+    deallocate(sbufta1)
+    deallocate(sbufta2)
+    deallocate(sbufta3)
+    deallocate(sbuftb1)
+    deallocate(sbuftb2)
+    deallocate(sbuftb3)
+    deallocate(sbuftc1)
+    deallocate(sbuftc2)
+    deallocate(sbuftc3)
+    deallocate(sbuftd1)
+    deallocate(sbuftg2)
+    deallocate(sbufth2)
+    deallocate(sbufth3)
+    deallocate(sbufti2)
 
 
   end subroutine momentum_full_viscstress_tensor

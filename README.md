@@ -19,9 +19,19 @@ Our work was guided by a human algorithm we developed to port each transpose com
 5. Add the deallocate lines at the end of the subroutine.
 
 # Example
+In file `navier.f90`:
 
+![image](https://user-images.githubusercontent.com/46629861/167955906-49e039cf-8648-489c-b03b-bb65aa0a24f0.png)
 
+We will port the function `transpose_x_to_y(pp1,duxdxp2,ph4)`. src=pp1 and dst=duxdxp2.
 
-# Problems identified
+1. We see that the last time pp1 was updated is on line 334. 
+2. duxdxp2 is going to be used 345. Here we can see that we can overlap the calculation made on lines 337-338 with the communication that is needed from pp1 to duxdxp2. After adding the \_start and \_wait directives the code looks like this:
 
-* When one has too many communications on the background, they are not optimal and can be degreading for the performance. One should be aware of the quantity of communications going on the background.
+![image](https://user-images.githubusercontent.com/46629861/167956607-a433eca2-ba39-452c-aa5f-bfb9de42db96.png)
+
+3. 
+
+# Future work
+
+* When one has too many communications on the background, they are not optimal and can be degreading for the performance. One should be aware of the quantity of communications going on the background. Had we have more time we would start to study how to make the number of background communications optimal for the BluField-2.

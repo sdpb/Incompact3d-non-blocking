@@ -17,4 +17,4 @@ modification of the "src" variables, so that the start of the communication is m
 
 # Problems identified
 
-* 
+* When one has too many communications on the background, they are not optimal and can be degreading for the performance. One should be aware of the quantity of communications going on the background.

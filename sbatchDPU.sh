@@ -6,10 +6,6 @@
 #SBATCH --error=err.%j
 set -e
 
-dir=ISC-$(date "+%Y-%m-%d_%H-%M-%S")
-cd examples
-cp -r ISC-base $dir
-
 PPN=${1:-32}
 
 # Loading right environment
@@ -20,6 +16,6 @@ srun -l hostname -s | awk '{print $2 ":"'"$PPN}" | grep -v bf | sort > hostfile
 srun -l hostname -s | awk '{print $2}' | grep bf | sort |uniq > dpufile
 
 NPROC=$((PPN * 8))
-
+EXE=../../xcompact3d
 # DPU offload
 mpirun_rsh -np $NPROC  -hostfile hostfile -dpufile dpufile $EXE

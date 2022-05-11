@@ -592,10 +592,21 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
 
   !! IN/OUT
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: var1
+  real(mytype), allocatable, dimension(:,:,:) :: sbufta1,rbufta2, sbufvar1,rbuftb2
   real(mytype),dimension(xsize(1),xsize(2),xsize(3),ntime) :: dvar1
+  integer, dimension(2) :: handles
 
   !! LOCAL
   real(mytype),dimension(ysize(1),ysize(3)) :: bctop, bcbot
+
+  allocate(sbufvar1(size(var1,1), size(var1,2), size(var1,3)))
+  allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
+      allocate(sbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
+    allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
+
+
+
+  call transpose_x_to_y_start(handles(1), var1,tb2, sbufvar1,rbuftb2)
 
   if (itimescheme.eq.1) then
      !>>> Explicit Euler
@@ -661,9 +672,12 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   endif
 
   !Y-PENCIL FOR MATRIX INVERSION
-  call transpose_x_to_y(var1,tb2)
+  !call transpose_x_to_y(var1,tb2)
 
-  call transpose_x_to_y(ta1,ta2)
+  call transpose_x_to_y_wait(handles(1), var1,tb2, sbufvar1,rbuftb2)
+      deallocate(sbufvar1)
+    deallocate(rbuftb2)
+  call transpose_x_to_y_start(handles(2), ta1,ta2, sbufta1,rbufta2)
 
   !
   ! Prepare boundary conditions
@@ -698,6 +712,9 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
   !if isecondder=5, we need nona inversion
   !id isecondder is not 5, we need septa inversion
 
+  call transpose_x_to_y_wait(handles(2), ta1,ta2, sbufta1,rbufta2)
+        deallocate(sbufta1)
+    deallocate(rbufta2)
   if (isecondder.ne.5) then
      if (isc.eq.0) then
         call multmatrix7(td2,ta2,tb2,npaire,ncly1,nclyn,xcst)
@@ -803,6 +820,8 @@ subroutine  inttimp (var1,dvar1,npaire,isc,forcing1)
         var1(:,:,:)=var1(:,:,:)+forcing1(:,:,:)
      endif
   endif
+
+
 
 
   return

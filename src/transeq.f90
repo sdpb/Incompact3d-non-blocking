@@ -856,13 +856,6 @@ deallocate(rbuftc1)
     
     implicit none
 
-    ! EAFIT - define rbuf and sbuf
-    real(mytype), allocatable, dimension(:,:,:) :: rbufta1,rbufta2,rbufta3,rbuftb1,rbuftb2,rbuftb3,rbuftc1,rbuftc2,rbuftc3,rbufte1,rbuftf1,rbuftg2,rbuftg3,rbufth3,rbufti2,rbufti3,sbufmu1,sbufta1,sbufta2,sbufta3,sbuftb1,sbuftb2,sbuftb3,sbuftc1,sbuftc2,sbuftc3,sbuftd1,sbuftg2,sbufth2,sbufth3,sbufti2
-
-
-    ! real(mytype), allocatable, dimension(:,:,:,:) ::     ! EAFIT - define handle mpi routine
-    integer, dimension(23) :: handles
-
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)) :: dux1, duy1, duz1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3)), intent(in) :: mu1
     real(mytype), dimension(zsize(1), zsize(2), zsize(3)), intent(in) :: divu3
@@ -871,68 +864,19 @@ deallocate(rbuftc1)
 
     one_third = one / three
 
-
-    ! EAFIT - define allocates
-    allocate(rbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
-    allocate(rbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
-    allocate(rbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
-    allocate(rbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
-    allocate(rbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
-    allocate(rbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
-    allocate(rbuftc1(size(tc1,1), size(tc1,2), size(tc1,3)))
-    allocate(rbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
-    allocate(rbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
-    allocate(rbufte1(size(te1,1), size(te1,2), size(te1,3)))
-    allocate(rbuftf1(size(tf1,1), size(tf1,2), size(tf1,3)))
-    allocate(rbuftg2(size(tg2,1), size(tg2,2), size(tg2,3)))
-    allocate(rbuftg3(size(tg3,1), size(tg3,2), size(tg3,3)))
-    allocate(rbufth3(size(th3,1), size(th3,2), size(th3,3)))
-    allocate(rbufti2(size(ti2,1), size(ti2,2), size(ti2,3)))
-    allocate(rbufti3(size(ti3,1), size(ti3,2), size(ti3,3)))
-    allocate(sbufmu1(size(mu1,1), size(mu1,2), size(mu1,3)))
-    allocate(sbufta1(size(ta1,1), size(ta1,2), size(ta1,3)))
-    allocate(sbufta2(size(ta2,1), size(ta2,2), size(ta2,3)))
-    allocate(sbufta3(size(ta3,1), size(ta3,2), size(ta3,3)))
-    allocate(sbuftb1(size(tb1,1), size(tb1,2), size(tb1,3)))
-    allocate(sbuftb2(size(tb2,1), size(tb2,2), size(tb2,3)))
-    allocate(sbuftb3(size(tb3,1), size(tb3,2), size(tb3,3)))
-    allocate(sbuftc1(size(tc1,1), size(tc1,2), size(tc1,3)))
-    allocate(sbuftc2(size(tc2,1), size(tc2,2), size(tc2,3)))
-    allocate(sbuftc3(size(tc3,1), size(tc3,2), size(tc3,3)))
-    allocate(sbuftd1(size(td1,1), size(td1,2), size(td1,3)))
-    allocate(sbuftg2(size(tg2,1), size(tg2,2), size(tg2,3)))
-    allocate(sbufth2(size(th2,1), size(th2,2), size(th2,3)))
-    allocate(sbufth3(size(th3,1), size(th3,2), size(th3,3)))
-    allocate(sbufti2(size(ti2,1), size(ti2,2), size(ti2,3)))
-    
-
-
-
     call derz (tc3,divu3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,zero)
-    
-    ! EAFIT - Call transpose start
-    call transpose_z_to_y_start(handles(1), tc3, tc2, sbuftc3, rbuftc2)
+    call transpose_z_to_y(tc3, tc2)
     call transpose_z_to_y(divu3, th2)
 
     call dery(tb2,th2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,zero)
-
-    ! EAFIT - Call transpose start
-    call transpose_y_to_x_start(handles(2), tb2, te1, sbuftb2,rbufte1)
-    
-    ! EAFIT - Call transpose start
-    call transpose_z_to_y_wait(handles(1), tc3, tc2, sbuftc3, rbuftc2)
-
-    call transpose_y_to_x_start(handles(3), tc2, tf1, sbuftc2,rbuftf1)
+    call transpose_y_to_x(tb2, te1)
+    call transpose_y_to_x(tc2, tf1)
     call transpose_y_to_x(th2, tg1)
 
     call derx(td1,tg1,di1,sx,ffx,fsx,fwx,xsize(1),xsize(2),xsize(3),0,zero)
 
     dux1(:,:,:) = dux1(:,:,:) + mu1(:,:,:) * one_third * xnu * td1(:,:,:)
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_x_wait(handles(2), tb2, te1, sbuftb2,rbufte1)
     duy1(:,:,:) = duy1(:,:,:) + mu1(:,:,:) * one_third * xnu * te1(:,:,:)
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_x_wait(handles(3), tc2, tf1, sbuftc2,rbuftf1)
     duz1(:,:,:) = duz1(:,:,:) + mu1(:,:,:) * one_third * xnu * tf1(:,:,:)
 
     !! Variable viscosity part
@@ -940,196 +884,69 @@ deallocate(rbuftc1)
     call derx (tb1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
     call derx (tc1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
     call derx (td1,mu1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,zero)
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(4),mu1, ti2,sbufmu1,rbufti2)
-
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(5),td1, tg2, sbuftd1,rbuftg2)
-
     ta1(:,:,:) = two * ta1(:,:,:) - (two * one_third) * tg1(:,:,:)
 
     ta1(:,:,:) = td1(:,:,:) * ta1(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(6),ta1, ta2,sbufta1,rbufta2)
-
     tb1(:,:,:) = td1(:,:,:) * tb1(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(7),tb1, tb2,sbuftb1,rbuftb2)
-
     tc1(:,:,:) = td1(:,:,:) * tc1(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_x_to_y_start(handles(8),tc1, tc2,sbuftc1,rbuftc2)
 
-    !call transpose_x_to_y(ta1, ta2)
-    !call transpose_x_to_y(tb1, tb2)
-    !call transpose_x_to_y(tc1, tc2)
-    !call transpose_x_to_y(td1, tg2)
+    call transpose_x_to_y(ta1, ta2)
+    call transpose_x_to_y(tb1, tb2)
+    call transpose_x_to_y(tc1, tc2)
+    call transpose_x_to_y(td1, tg2)
 
     call dery (td2,ux2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcx)
     call dery (te2,uy2,di2,sy,ffy,fsy,fwy,ppy,ysize(1),ysize(2),ysize(3),0,ubcy)
     call dery (tf2,uz2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,ubcz)
     te2(:,:,:) = two * te2(:,:,:) - (two * one_third) * th2(:,:,:)
 
-    !call transpose_x_to_y(mu1, ti2)
-    ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(handles(4),mu1, ti2,sbufmu1,rbufti2)
+    call transpose_x_to_y(mu1, ti2)
     call dery (th2,ti2,di2,sy,ffyp,fsyp,fwyp,ppy,ysize(1),ysize(2),ysize(3),1,zero)
-    call transpose_y_to_x_start(handles(9), th2, te1,sbufth2,rbufte1) !! dmudy
 
-    ! EAFIT - Call transpose start
-    call transpose_y_to_z_start(handles(10),ti2, ti3,sbufti2,rbufti3) !! mu
-
-    ! EAFIT - Call transpose start
-    call transpose_y_to_z_start(handles(11),th2, th3,sbufth2,rbufth3) !! dmudy
-
-    ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(handles(6),ta1, ta2,sbufta1,rbufta2)
     ta2(:,:,:) = ta2(:,:,:) + th2(:,:,:) * td2(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_y_to_z_start(handles(12), ta2, ta3,sbufta2,rbufta3)
-    ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(handles(5),td1, tg2, sbuftd1,rbuftg2)
-    ! EAFIT - Call transpose start
-    call transpose_y_to_z_start(handles(13),tg2, tg3,sbuftg2,rbuftg3) !! dmudx
-    ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(handles(7),tb1, tb2,sbuftb1,rbuftb2)
     tb2(:,:,:) = tb2(:,:,:) + th2(:,:,:) * te2(:,:,:) + tg2(:,:,:) * td2(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_y_to_z_start(handles(14),tb2, tb3,sbuftb2,rbuftb3)
-    ! EAFIT - Call transpose wait
-    call transpose_x_to_y_wait(handles(8),tc1, tc2,sbuftc1,rbuftc2)
     tc2(:,:,:) = tc2(:,:,:) + th2(:,:,:) * tf2(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_y_to_z_start(handles(15),tc2, tc3,sbuftc2,rbuftc3)
 
-
-    !call transpose_y_to_z(ta2, ta3)
-    !call transpose_y_to_z(tb2, tb3)
-    !call transpose_y_to_z(tc2, tc3)
-    !call transpose_y_to_z(tg2, tg3) !! dmudx
-    !call transpose_y_to_z(th2, th3) !! dmudy
-    !call transpose_y_to_z(ti2, ti3) !! mu
+    call transpose_y_to_z(ta2, ta3)
+    call transpose_y_to_z(tb2, tb3)
+    call transpose_y_to_z(tc2, tc3)
+    call transpose_y_to_z(tg2, tg3) !! dmudx
+    call transpose_y_to_z(th2, th3) !! dmudy
+    call transpose_y_to_z(ti2, ti3) !! mu
 
     call derz (td3,ux3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcx)
     call derz (te3,uy3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,ubcy)
     call derz (tf3,uz3,di3,sz,ffz,fsz,fwz,zsize(1),zsize(2),zsize(3),0,ubcz)
     tf3(:,:,:) = two * tf3(:,:,:) - (two * one_third) * divu3(:,:,:)
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_z_wait(handles(15),tc2, tc3,sbuftc2,rbuftc3)
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_z_wait(handles(13),tg2, tg3,sbuftg2,rbuftg3) !! dmudx
 
     tc3(:,:,:) = tc3(:,:,:) + tg3(:,:,:) * td3(:,:,:) + th3(:,:,:) * te3(:,:,:)
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_z_wait(handles(11),th2, th3,sbufth2,rbufth3) !! dmudy
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_z_wait(handles(10),ti2, ti3,sbufti2,rbufti3) !! mu
+
     call derz (th3,ti3,di3,sz,ffzp,fszp,fwzp,zsize(1),zsize(2),zsize(3),1,zero)
-    ! EAFIT - Call transpose start
-    call transpose_z_to_y_start(handles(16),th3, ti2,sbufth3,rbufti2) !! dmudz
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_z_wait(handles(12), ta2, ta3,sbufta2,rbufta3)
+
     ta3(:,:,:) = ta3(:,:,:) + th3(:,:,:) * td3(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_z_to_y_start(handles(17),ta3, ta2,sbufta3,rbufta2)
-
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_z_wait(handles(14),tb2, tb3,sbuftb2,rbuftb3)
     tb3(:,:,:) = tb3(:,:,:) + th3(:,:,:) * te3(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_z_to_y_start(handles(18),tb3, tb2,sbuftb3,rbuftb2)
-
     tc3(:,:,:) = tc3(:,:,:) + th3(:,:,:) * tf3(:,:,:)
-    ! EAFIT - Call transpose start
-    call transpose_z_to_y_start(handles(19),tc3, tc2,sbuftc3,rbuftc2)
 
-    !call transpose_z_to_y(ta3, ta2)
-    !call transpose_z_to_y(tb3, tb2)
-    !call transpose_z_to_y(tc3, tc2)
-    !call transpose_z_to_y(th3, ti2) !! dmudz
-
-    ! EAFIT - Call transpose wait
-    call transpose_z_to_y_wait(handles(18),tb3, tb2,sbuftb3,rbuftb2)
-    ! EAFIT - Call transpose wait
-    call transpose_z_to_y_wait(handles(16),th3, ti2,sbufth3,rbufti2) !! dmudz
-    ! EAFIT - Call transpose start
-    call transpose_y_to_x_start(handles(20),ti2, tf1,sbufti2,rbuftf1) !! dmudz
+    call transpose_z_to_y(ta3, ta2)
+    call transpose_z_to_y(tb3, tb2)
+    call transpose_z_to_y(tc3, tc2)
+    call transpose_z_to_y(th3, ti2) !! dmudz
 
     tb2(:,:,:) = tb2(:,:,:) + ti2(:,:,:) * tf2(:,:,:)
 
-    ! EAFIT - Call transpose start
-    call transpose_y_to_x_start(handles(21),tb2, tb1, sbuftb2,rbuftb1)
-
-    ! EAFIT - Call transpose wait
-    call transpose_z_to_y_wait(handles(17),ta3, ta2,sbufta3,rbufta2)
-    ! EAFIT - Call transpose start
-    call transpose_y_to_x_start(handles(22),ta2, ta1,sbufta2,rbufta1)
-
-    !call transpose_y_to_x(ta2, ta1)
-    !call transpose_y_to_x(tb2, tb1)
-    ! EAFIT - Call transpose wait
-    call transpose_z_to_y_wait(handles(19),tc3, tc2,sbuftc3,rbuftc2)
-    ! EAFIT - Call transpose start
-    call transpose_y_to_x_start(handles(23),tc2, tc1,sbuftc2,rbuftc1)
-    
-    !call transpose_y_to_x(tc2, tc1)
-    !call transpose_y_to_x(th2, te1) !! dmudy
-    !call transpose_y_to_x(ti2, tf1) !! dmudz
+    call transpose_y_to_x(ta2, ta1)
+    call transpose_y_to_x(tb2, tb1)
+    call transpose_y_to_x(tc2, tc1)
+    call transpose_y_to_x(th2, te1) !! dmudy
+    call transpose_y_to_x(ti2, tf1) !! dmudz
 
     call derx (th1,uy1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcy)
     call derx (ti1,uz1,di1,sx,ffxp,fsxp,fwxp,xsize(1),xsize(2),xsize(3),1,ubcz)
-   
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_x_wait(handles(9), th2, te1,sbufth2,rbufte1) !! dmudy
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_x_wait(handles(22),ta2, ta1,sbufta2,rbufta1)
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_x_wait(handles(20),ti2, tf1,sbufti2,rbuftf1) !! dmudz
-
-
     ta1(:,:,:) = ta1(:,:,:) + te1(:,:,:) * th1(:,:,:) + tf1(:,:,:) * ti1(:,:,:)
 
     dux1(:,:,:) = dux1(:,:,:) + xnu * ta1(:,:,:)
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_x_wait(handles(21),tb2, tb1, sbuftb2,rbuftb1)
     duy1(:,:,:) = duy1(:,:,:) + xnu * tb1(:,:,:)
-    ! EAFIT - Call transpose wait
-    call transpose_y_to_x_wait(handles(20),tc2, tc1,sbuftc2,rbuftc1)
     duz1(:,:,:) = duz1(:,:,:) + xnu * tc1(:,:,:)
-
-
-    ! EAFIT - define deallocates
-    deallocate(rbufta1)
-    deallocate(rbufta2)
-    deallocate(rbufta3)
-    deallocate(rbuftb1)
-    deallocate(rbuftb2)
-    deallocate(rbuftb3)
-    deallocate(rbuftc1)
-    deallocate(rbuftc2)
-    deallocate(rbuftc3)
-    deallocate(rbufte1)
-    deallocate(rbuftf1)
-    deallocate(rbuftg2)
-    deallocate(rbuftg3)
-    deallocate(rbufth3)
-    deallocate(rbufti2)
-    deallocate(rbufti3)
-    deallocate(sbufmu1)
-    deallocate(sbufta1)
-    deallocate(sbufta2)
-    deallocate(sbufta3)
-    deallocate(sbuftb1)
-    deallocate(sbuftb2)
-    deallocate(sbuftb3)
-    deallocate(sbuftc1)
-    deallocate(sbuftc2)
-    deallocate(sbuftc3)
-    deallocate(sbuftd1)
-    deallocate(sbuftg2)
-    deallocate(sbufth2)
-    deallocate(sbufth3)
-    deallocate(sbufti2)
 
 
   end subroutine momentum_full_viscstress_tensor

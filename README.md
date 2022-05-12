@@ -61,6 +61,11 @@ The files we identified were the following
 All these in addition to modifications in decomp2d changing from NBC  to MPI call.
 Note: all these files were ported by the subteam that was working in coding challenge task; Vincent, Samuel and Manuela
 
+# Learnings
+
+- We found out that the non blocking strategy is not always the best option (depends on the context).
+- Overlapping computation and communication decreases the latency in data transfer, so it improves performance.
+- The usage of Infiniband sightly affects  the performance, since it is kernel by pass, we gain that time because we don't have to retrieve data from kernel, then, we gain that latency time.
 
 # Future work
 

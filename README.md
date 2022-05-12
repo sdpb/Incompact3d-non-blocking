@@ -12,6 +12,8 @@ function into a "\_start" function and a "\_wait" function that starts the commu
 # How we ported the code
 Our work was guided by a human algorithm we developed to port each transpose communication. We proceed to explain it:
 
+In first place, we had to change the files transpose\_\*\_to\_\*.f90 and change each NBC call for its associated MPI call. Then, we made use of the following algorithm:
+
 1. Identify the last time the src variable was updated, and put the \_start function just after it.
 2. Identify the next time the dst variable is going to be used, and put the \_wait function just before it.
 3. Declare the buffer variables (sbuf and rbuf) at the beginning of each subroutine as allocatable, and having the same number of dimensions as its corresponding original variable (see the example below to understand it fully). E.g. if there is a src variable named "ta1" its send buffer variable will be "sbufta1".
@@ -38,6 +40,24 @@ We will port the function `transpose_x_to_y(pp1,duxdxp2,ph4)`. src=pp1 and dst=d
 5. We deallocate them at the end of the subroutine.
 
 ![image](https://user-images.githubusercontent.com/46629861/167957085-6ad690b5-a643-43dd-a26e-62b0d602dd27.png)
+
+We identificated that not all transpose\_\*\_to\_\* calls were worth to use its associated non-blocking behaviour. Because they were modificated right before they were used, so overlapping was not really happening. An example of this situation can be the following
+
+
+
+# Modificated files
+For improving performance, we ran mpiP profiler to identify which files did the most MPIALLTOALL calls, and change them to non blocking behaviour. 
+The files we identified were the following
+
+- src/BC-Cylinder.f90
+- src/BC-TGV.f90
+- src/forces.f90
+- src/implicit.f90
+- src/navier.f90
+- src/transeq.f90
+
+All these in addition to modifications in decomp2d changing from NBC  to MPI call.
+Note: all these files were ported by the subteam that was working in coding challenge task; Vincent, Samuel and Manuela
 
 
 # Future work

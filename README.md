@@ -63,8 +63,9 @@ Note: all these files were ported by the subteam that was working in coding chal
 
 # Learnings
 
-- We found out that the non blocking strategy is not always the best option (depends on the context).
-- Overlapping computation and communication decreases the latency in data transfer, so it improves performance.
+- We found out that the non blocking strategy is not always the best option; depends on the context and how many different communication routines are being executed on the DPU.
+- Overlapping computation and communication with DPU hides the latency in data transfer from the CPU perspective, so it improves performance.
+- Overlapping computation and communication with DPUs is a way to improve performance by letting the CPU handle only what it really needs to compute, and relaying the communication to specialized hardware.
 - The usage of Infiniband sightly affects  the performance, since it is kernel by pass, we gain that time because we don't have to retrieve data from kernel, then, we gain that latency time.
 
 # Future work

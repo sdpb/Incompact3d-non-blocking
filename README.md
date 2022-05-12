@@ -2,7 +2,7 @@
 
 This readme serves as a documentation to understand our work done porting the Incompact3d application to use non-blocking communication.
 
-# The problem
+# The task
 
 This app uses a lot of communication by using the group of routines "transpose\_\*\_to\_\*(src, dst)" that belong to the `decomp2d` module. The 
 same module also provides their analogous functions that can be used to make such routines non-blocking. Said non-blocking functions divide the original
@@ -12,11 +12,11 @@ function into a "\_start" function and a "\_wait" function that starts the commu
 # How we ported the code
 Our work was guided by a human algorithm we developed to port each transpose communication. We proceed to explain it:
 
-In first place, we had to change the files transpose\_\*\_to\_\*.f90 and change each NBC call for its associated MPI call. Then, we made use of the following algorithm:
+In the first place, we had to change the files transpose\_\*\_to\_\*.f90 and change each NBC call for its associated MPI call. Then, we made use of the following algorithm:
 
-1. Identify the last time the src variable was updated, and put the \_start function just after it.
-2. Identify the next time the dst variable is going to be used, and put the \_wait function just before it.
-3. Declare the buffer variables (sbuf and rbuf) at the beginning of each subroutine as allocatable, and having the same number of dimensions as its corresponding original variable (see the example below to understand it fully). E.g. if there is a src variable named "ta1" its send buffer variable will be "sbufta1".
+1. Identify the last time the src variable was updated, and put the \_start function just after it. The rationale for this is that we want to start the communication as soon as possible while having the correct value in the src variable.
+2. Identify the next time the dst variable is going to be used, and put the \_wait function just before it. The rationale for this is to have the communication in the background for as long as possible, and to ensure that the dst variable has been fully updated and ready to use.
+3. Declare the buffer variables (sbuf and rbuf) at the beginning of each subroutine as allocatable, and having the same number of dimensions as its corresponding original variable (see the example below to understand it fully). E.g. if there is a src variable named "ta1" its send buffer variable will be "sbufta1" and have the same dimensions and size as "ta1".
 4. Allocate the buffer variables so that they have the same size on each dimension as its corresponding original variable.
 5. Add the deallocate lines at the end of the subroutine.
 

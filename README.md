@@ -43,7 +43,9 @@ We will port the function `transpose_x_to_y(pp1,duxdxp2,ph4)`. src=pp1 and dst=d
 
 We identificated that not all transpose\_\*\_to\_\* calls were worth to use its associated non-blocking behaviour. Because they were modificated right before they were used, so overlapping was not really happening. An example of this situation can be the following
 
+![image](https://user-images.githubusercontent.com/53027815/167989809-bb3e936f-0711-4a10-94d7-11b6b3afc6b5.png)
 
+In this case we can see that the transpose output variable is used almost immediately in the for loop, and the input variable is modified right before the transpose call
 
 # Modificated files
 For improving performance, we ran mpiP profiler to identify which files did the most MPIALLTOALL calls, and change them to non blocking behaviour. 
